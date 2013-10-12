@@ -5,10 +5,10 @@ import "reflect"
 import "container/list"
 
 func is_struct (x interface{}) bool {
-  //      fmt.Println("is_struct")
+        //      fmt.Println("is_struct")
         v := reflect.ValueOf(x)
         k := v.Kind()
-    //    fmt.Println(k == reflect.Struct)
+        //    fmt.Println(k == reflect.Struct)
         return k == reflect.Struct
 
         }
@@ -40,10 +40,31 @@ func exts_no_check (n V, v interface {}, s *SubsT) *SubsT {
                 panic("foo")
         }
         var news = new(SubsT)
-        news.name=n
-        news.thing=v
-        news.more=s
+        news.name_=n
+        news.thing_=v
+        news.more_=s
         return news
+}
+
+func subst_name(s S) V {
+        return s.name_
+}
+
+func subst_thing(s S) interface {} {
+        return s.thing_
+}
+
+func subst_more(s S) S {
+        if s != nil {
+                x := s.more_
+		if x != nil {
+			return &SubsT{name_:subst_name(x),thing_:subst_thing(x),more_:x.more_,c:s.c}
+		} else {
+			return x
+		}
+        } else {
+		return s
+	}
 }
 
 func lookup (thing interface{}, s *SubsT) LookupResult {
@@ -62,13 +83,13 @@ func lookup (thing interface{}, s *SubsT) LookupResult {
                         lr.Term = false
                         lr.v = v
                         return lr
-                } else if s.name.name == v.name {
+                } else if subst_name(s).name == v.name {
                         lr.Var = false
                         lr.Term = true
-                        lr.t = s.thing
+                        lr.t = subst_thing(s)
                         return lr
                 } else {
-                        return lookup(thing,s.more)
+                        return lookup(thing,subst_more(s))
                 }
 
         }
@@ -88,17 +109,17 @@ func subst_find (v V, s *SubsT) (*SubsT, bool) {
                 // fmt.Println(s)
                 // fmt.Println("C")
                 // fmt.Println(s.name)
-                if v.name == s.name.name {
+                if v.name == subst_name(s).name {
                         return s, true
                 } else {
-                        return subst_find(v, s.more)
+                        return subst_find(v, subst_more(s))
                 }
         }
 }
 
 func walk (n interface {}, s *SubsT) LookupResult {
         // fmt.Println("==walk==")
-	// fmt.Println(n)
+        // fmt.Println(n)
         var lr LookupResult
         v, visvar := n.(V)
         // fmt.Println("visvar")
@@ -115,7 +136,7 @@ func walk (n interface {}, s *SubsT) LookupResult {
                 // fmt.Println(s)
                 subs, subsfound := subst_find(v, s)
                 if subsfound {
-                        return walk(subs.thing, s)
+                        return walk(subst_thing(subs), s)
                 } else {
                         lr.Var = true
                         lr.Term = false
@@ -190,14 +211,14 @@ func unify (u interface{}, v interface{}, s *SubsT) (*SubsT, bool) {
                         is_struct(v1.t) &&
                         (type_name(u1.t) == type_name(v1.t)) &&
                         (field_count(v1.t) == field_count(u1.t)) {
-//			fmt.Println("Here")
+                        //                      fmt.Println("Here")
                         ns := s
                         for i := 0 ; i < field_count(v1.t); i++  {
                                 n, ok := unify(field_by_index(u1.t,i),field_by_index(v1.t,i),ns)
                                 if !ok {
                                         return ns, false
                                 }
-				ns = n
+                                ns = n
                         }
                         return ns, true
                 } else {
@@ -222,21 +243,21 @@ func unify_no_check (u, v, s *SubsT) (*SubsT, bool) {
 
 func walk_star (v LookupResult, s *SubsT) LookupResult {
         // fmt.Println("==walk_star==")
-	// fmt.Println(v)
-	// fmt.Println(s)
+        // fmt.Println(v)
+        // fmt.Println(s)
         if v.Var {
                 return walk(v.v,s)
         } else {
-		if is_struct(v.t) {
-//			fmt.Println("found struct")
-			var lr LookupResult
-			lr.Var = false
-			lr.Term = true
-			lr.t = 5
-			return lr
-		} else {
-			return walk(v.t,s)
-		}
+                if is_struct(v.t) {
+                        //                      fmt.Println("found struct")
+                        var lr LookupResult
+                        lr.Var = false
+                        lr.Term = true
+                        lr.t = 5
+                        return lr
+                } else {
+                        return walk(v.t,s)
+                }
         }
 }
 
@@ -290,14 +311,14 @@ func reify (v_ interface{}, s *SubsT) interface{} {
                 lr.Term = true
                 lr.t = v_
         }
-	
+
         // fmt.Println(lr)
-	// fmt.Println("before first ws")
+        // fmt.Println("before first ws")
         v := walk_star(lr,s)
-	// fmt.Println("after first ws")
+        // fmt.Println("after first ws")
         // fmt.Println("v")
         // fmt.Println(v.Var)
-	// fmt.Println(v.v)
+        // fmt.Println(v.v)
         lr2 := walk_star(v, reify_s(v,nil))
         return lr2.t
 }
@@ -485,3 +506,77 @@ func (d DB) Find (entity interface{}, attribute interface{}, value interface{}) 
         }
         return g
 }
+
+
+
+// func prefix_s(s S, s1 S) S {
+// 	if s == s1 {
+// 		return nil
+// 	} else {
+// 		return &SubsT{name_:s.name_,thing_:s.thing_,more_:prefix_s(subst_more(s), subst_more(s1)),c:s.c}
+// 	}
+// }
+
+// func new_verify(s S, a S, unify_success bool) R {
+// 	if !unify_success {
+// 		return unit(a)
+// 	} else if s_of(a) == s {
+// 		return mzero()
+// 	} else {
+// 		c := prefix_s(s,s_of(a))
+// 		a := s_of(a)
+// 		b := extend_with_c(a,c)
+// 		return unit(b)
+// 	}
+// }
+
+// func Neq (u interface{}, v interface{}) Goal {
+//         return func (s S) R {
+//                 s1, unify_success := unify(u,v,s_of(s))
+// 		neq_verify(s1,s,unify_success)
+//         }
+// }
+
+// func unify_star(n V, t interface{}, s S) S {
+// 	if 
+// }
+
+// func verify_c(c *ConsT, cs *ConsT, s S) (*ConsT,bool) {
+// 	if c == nil {
+// 		return cs
+// 	} else {
+// 		s1, unify_success := unify_star(c.name,c.thing,s)
+// 		if unify_success {
+// 			if s == s1 {
+// 				return nil,false
+// 			} else {
+// 				cc := prefix_s(s1,s)
+// 				return verify_c(c.more,&ConsT{name:c.name,thing:c.thing,more:cs}, s)
+// 			}
+// 		} else {
+// 			return verify_c(c.more, cs, s)
+// 		}
+// 	}
+// }
+
+// func unify_verify(s S, a S, unify_success bool) R {
+// 	if !unify_success {
+// 		return mzero()
+// 	} else if s_of(a) == s {
+// 		return unit(a)
+// 	} else  {
+// 		c, verified := verify_c(c_of(a), nil, s)
+// 		if verified {
+// 			return unit(make_a(s, c))
+// 		} else {
+// 			return mzero()
+// 		}
+// 	}
+//  }
+
+// func Unify (u interface{}, v interface{}) Goal {
+//         return func (s S) R {
+//                 s1, unify_success := unify(u,v,s_of(s))
+// 		return unify_verify(s1,s,unify_success)
+//         }
+// }

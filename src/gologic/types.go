@@ -7,15 +7,17 @@ type LVarT struct {
 
 type V *LVarT
 
-type SubsT struct {
-        name V
-        thing interface {}
-        more *SubsT
+type ConsT struct {
+	name V
+	thing interface {}
+	more *ConsT
 }
 
-type Package struct {
-	subst *SubsT
-	con *SubsT
+type SubsT struct {
+        name_ V
+        thing_ interface {}
+        more_ *SubsT
+	c *ConsT
 }
 
 type LookupResult struct {
@@ -26,7 +28,6 @@ type LookupResult struct {
 }
 
 type S *SubsT
-//type S *Package
 
 type Stream struct {
         first S
