@@ -3,10 +3,11 @@ import "testing"
 
 type rel int
 
-// keywords if you squit hard
+// keywords if you squint hard
 const (
 	Likes rel =  iota
 	Is
+	Sex
 	)
 
 func TestReasoningOverDB (t *testing.T) {
@@ -19,15 +20,22 @@ func TestReasoningOverDB (t *testing.T) {
 	db.Assert("Alice", Likes, "Sushi")
 	db.Assert("Pizza", Is,    "cheap")
 	db.Assert("Sushi", Is,    "delicious")
+	db.Assert("Bob",   Sex,    "male")
+	db.Assert("Tom",   Sex,    "male")
+	db.Assert("Jill",  Sex,    "female")
+	db.Assert("Alice", Sex,    "female")
 
 	who, something := Fresh2()
 
+	// match.com, for tuples!
         c3 := Run(who, And(db.Find("Bob", Likes, something),
                            db.Find(who, Likes, something),
                            Or(db.Find(something, Is, "cheap"), 
-                              db.Find(something, Is, "delicious"))))
+                              db.Find(something, Is, "delicious")),
+		           Neq("Bob", who),
+                           db.Find(who, Sex, "female")))
 
-	var foo [6]interface{}
+	var foo [2]interface{}
 
         for ii := 0 ; true; ii++ {
                 i := <- c3
@@ -38,12 +46,8 @@ func TestReasoningOverDB (t *testing.T) {
                 }
         }
 
-	if foo[0] != "Bob" { t.Fatal(foo[0])}
-	if foo[1] != "Tom" { t.Fatal(foo[1])}
-	if foo[2] != "Jill" { t.Fatal(foo[2])}
-	if foo[3] != "Bob" { t.Fatal(foo[3])}
-	if foo[4] != "Alice" { t.Fatal(foo[4])}
-	if foo[5] != "Tom" { t.Fatal(foo[5])}
+	if foo[0] != "Jill" { t.Fatal(foo[0])}
+	if foo[1] != "Alice" { t.Fatal(foo[1])}
 }
 
 type person struct {
@@ -69,4 +73,12 @@ func TestingGoals (t *testing.T) {
                        And(Unify(a,b),Unify(b,c),Unify(c,3))))
 	if 1 == <- ch {t.Fatal("not a 1")}
 	if 3 == <- ch {t.Fatal("not a 3")}
+}
+
+func TestingInequality (t *testing.T) {
+	a,b,c:=Fresh3()
+	ch := Run(a,Or(And(Unify(a,b),Unify(b,c),Unify(c,1)),
+                       And(Unify(a,b),Unify(b,c),Unify(c,3),Neq(c,3))))
+	if 1 == <- ch {t.Fatal("not a 1")}
+	if nil == <- ch {t.Fatal("not closed")}
 }

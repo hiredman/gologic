@@ -388,22 +388,6 @@ func choice (a S, s func () *Stream) *Stream {
         return x
 }
 
-// func Unify (u interface{}, v interface{}) Goal {
-//         return func (s S) R {
-//                 s1, unify_success := unify(u,v,s)
-//              // fmt.Println(u)
-//              // fmt.Println(v)
-//              // fmt.Println("unify_success")
-//              // fmt.Println(unify_success)
-//              // fmt.Println(s_of(s))
-//                 if unify_success {
-//                         return unit(s1)
-//                 } else {
-//                         return mzero()
-//                 }
-//         }
-// }
-
 func stream_concat(s1 *Stream, s2 func () *Stream) *Stream {
         if s1 == mzero() {
                 return s2()
