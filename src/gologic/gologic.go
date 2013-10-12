@@ -36,54 +36,54 @@ func lvar(n string) V {
 }
 
 func s_of(p S) *SubsT {
-	if p != nil {
-		return p.s
-	} else {
-		return nil
-	}
+        if p != nil {
+                return p.s
+        } else {
+                return nil
+        }
 }
 
-func c_of(p S) *ConsT {
-	if p != nil {
-		return p.c
-	} else {
-		return nil
-	}
+func c_of(p S) *SubsTNode {
+        if p != nil {
+                return p.c
+        } else {
+                return nil
+        }
 }
 
 func exts_no_check (n V, v interface {}, s S) S {
         if n == nil {
                 panic("foo")
         }
-	
-	a := s_of(s)
-	b := c_of(s)
-	
-	if a == nil {
-		return &Package{s:&SubsT{name:n,thing:v,more:nil},c:b}
-	} else {
-		news := &SubsT{name:n,thing:v,more:a}
-		return &Package{s:news,c:s.c}
-	}
+
+        a := s_of(s)
+        b := c_of(s)
+
+        if a == nil {
+                return &Package{s:&SubsT{name:n,thing:v,more:nil},c:b}
+        } else {
+                news := &SubsT{name:n,thing:v,more:a}
+                return &Package{s:news,c:s.c}
+        }
 }
 
 // func (s SubsT) String ()  string {
-// 	buf := "|"
-// 	ss := &s
-// 	for {
-// 		if ss != nil {
-// 			buf+="["
-// 			buf+=ss.name.toString()
-// 			buf+=" "
-// 			buf+=ss.thing.toString()
-// 			buf+="]"
-// 			ss = s.more
-// 		} else {
-// 			break
-// 		}
-// 	}
-// 	buf += "|"
-// 	return buf
+//      buf := "|"
+//      ss := &s
+//      for {
+//              if ss != nil {
+//                      buf+="["
+//                      buf+=ss.name.toString()
+//                      buf+=" "
+//                      buf+=ss.thing.toString()
+//                      buf+="]"
+//                      ss = s.more
+//              } else {
+//                      break
+//              }
+//      }
+//      buf += "|"
+//      return buf
 // }
 
 func subst_name(s S) V {
@@ -96,20 +96,20 @@ func subst_thing(s S) interface {} {
 
 func subst_more(s S) S {
         if s_of(s) != nil {
-		a := s_of(s)
-		b := c_of(s)
-		if a != nil {
-			return &Package{s:a.more,c:b}
-		} else {
-			return &Package{s:nil,c:b}
-		}
+                a := s_of(s)
+                b := c_of(s)
+                if a != nil {
+                        return &Package{s:a.more,c:b}
+                } else {
+                        return &Package{s:nil,c:b}
+                }
         } else {
-		return s
-	}
+                return s
+        }
 }
 
 func empty_subst(s S) bool {
-	return s_of(s) == nil
+        return s_of(s) == nil
 }
 
 func lookup (thing interface{}, s S) LookupResult {
@@ -388,21 +388,21 @@ func choice (a S, s func () *Stream) *Stream {
         return x
 }
 
-func Unify (u interface{}, v interface{}) Goal {
-        return func (s S) R {
-                s1, unify_success := unify(u,v,s)
-		// fmt.Println(u)
-		// fmt.Println(v)
-		// fmt.Println("unify_success")
-		// fmt.Println(unify_success)
-		// fmt.Println(s_of(s))
-                if unify_success {
-                        return unit(s1)
-                } else {
-                        return mzero()
-                }
-        }
-}
+// func Unify (u interface{}, v interface{}) Goal {
+//         return func (s S) R {
+//                 s1, unify_success := unify(u,v,s)
+//              // fmt.Println(u)
+//              // fmt.Println(v)
+//              // fmt.Println("unify_success")
+//              // fmt.Println(unify_success)
+//              // fmt.Println(s_of(s))
+//                 if unify_success {
+//                         return unit(s1)
+//                 } else {
+//                         return mzero()
+//                 }
+//         }
+// }
 
 func stream_concat(s1 *Stream, s2 func () *Stream) *Stream {
         if s1 == mzero() {
@@ -554,76 +554,91 @@ func (d DB) Find (entity interface{}, attribute interface{}, value interface{}) 
         return g
 }
 
+func cons_c (c *SubsT, cs *SubsTNode) *SubsTNode {
+        return &SubsTNode{e:c,r:cs}
+}
+
+func make_a (s *SubsT, c *SubsTNode) S {
+        return &Package{s:s,c:c}
+}
+
+func prefix_s(s *SubsT, ss *SubsT) *SubsT {
+        if s == ss {
+                return nil
+        } else {
+                return &SubsT{name:s.name,thing:s.thing,more:prefix_s(s.more, ss)}
+        }
+}
+
+func neq_verify(s *SubsT, a S, unify_success bool) R {
+        if !unify_success {
+                return unit(a)
+        } else if s_of(a) == s {
+                return mzero()
+        } else {
+                c := prefix_s(s,s_of(a))
+                b := make_a(s_of(a), cons_c(c, c_of(a)))
+                return unit(b)
+        }
+}
 
 
-// func prefix_s(s S, s1 S) S {
-// 	if s == s1 {
-// 		return nil
-// 	} else {
-// 		return &SubsT{name_:s.name_,thing_:s.thing_,more_:prefix_s(subst_more(s), subst_more(s1)),c:s.c}
-// 	}
-// }
+func Neq (u interface{}, v interface{}) Goal {
+        return func (s S) R {
+                s1, unify_success := unify(u,v,s)
+                return neq_verify(s_of(s1),s,unify_success)
+        }
+}
 
-// func new_verify(s S, a S, unify_success bool) R {
-// 	if !unify_success {
-// 		return unit(a)
-// 	} else if s_of(a) == s {
-// 		return mzero()
-// 	} else {
-// 		c := prefix_s(s,s_of(a))
-// 		a := s_of(a)
-// 		b := extend_with_c(a,c)
-// 		return unit(b)
-// 	}
-// }
+func unify_star(p *SubsT, s S) (S, bool){
+        if nil == p {
+                return s, true
+        } else {
+                s1, unify_success := unify(p.name,p.thing,s)
+                if unify_success {
+                        return unify_star(p.more,s1)
+                } else {
+                        return nil, false
+                }
+        }
+}
 
-// func Neq (u interface{}, v interface{}) Goal {
-//         return func (s S) R {
-//                 s1, unify_success := unify(u,v,s_of(s))
-// 		neq_verify(s1,s,unify_success)
-//         }
-// }
+func verify_c(c *SubsTNode, cs *SubsTNode, s S) (*SubsTNode, bool) {
+        if c == nil {
+                return cs, true
+        } else {
+                s1, unify_success := unify_star(c.e,s)
+                if unify_success {
+                        if s == s1 {
+                                return nil,false
+                        } else {
+                                cc := prefix_s(s_of(s1),s_of(s))
+                                return verify_c(c.r, &SubsTNode{e:cc,r:cs}, s)
+                        }
+                } else {
+                        return verify_c(c.r, cs, s)
+                }
+        }
+}
 
-// func unify_star(n V, t interface{}, s S) S {
-// 	if 
-// }
+func unify_verify(s S, a S, unify_success bool) R {
+        if !unify_success {
+                return mzero()
+        } else if s_of(a) == s_of(s) {
+                return unit(a)
+        } else  {
+                c, verified := verify_c(c_of(a), nil, s)
+                if verified {
+                        return unit(make_a(s_of(s), c))
+                } else {
+                        return mzero()
+                }
+        }
+}
 
-// func verify_c(c *ConsT, cs *ConsT, s S) (*ConsT,bool) {
-// 	if c == nil {
-// 		return cs
-// 	} else {
-// 		s1, unify_success := unify_star(c.name,c.thing,s)
-// 		if unify_success {
-// 			if s == s1 {
-// 				return nil,false
-// 			} else {
-// 				cc := prefix_s(s1,s)
-// 				return verify_c(c.more,&ConsT{name:c.name,thing:c.thing,more:cs}, s)
-// 			}
-// 		} else {
-// 			return verify_c(c.more, cs, s)
-// 		}
-// 	}
-// }
-
-// func unify_verify(s S, a S, unify_success bool) R {
-// 	if !unify_success {
-// 		return mzero()
-// 	} else if s_of(a) == s {
-// 		return unit(a)
-// 	} else  {
-// 		c, verified := verify_c(c_of(a), nil, s)
-// 		if verified {
-// 			return unit(make_a(s, c))
-// 		} else {
-// 			return mzero()
-// 		}
-// 	}
-//  }
-
-// func Unify (u interface{}, v interface{}) Goal {
-//         return func (s S) R {
-//                 s1, unify_success := unify(u,v,s_of(s))
-// 		return unify_verify(s1,s,unify_success)
-//         }
-// }
+func Unify (u interface{}, v interface{}) Goal {
+        return func (s S) R {
+                s1, unify_success := unify(u,v,s)
+                return unify_verify(s1,s,unify_success)
+        }
+}

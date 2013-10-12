@@ -7,12 +7,6 @@ type LVarT struct {
 
 type V *LVarT
 
-type ConsT struct {
-	name V
-	thing interface {}
-	more *ConsT
-}
-
 type SubsT struct {
         name V
         thing interface {}
@@ -26,9 +20,14 @@ type LookupResult struct {
         t interface{}
 }
 
+type SubsTNode struct {
+	e *SubsT
+	r *SubsTNode
+}
+
 type Package struct {
 	s *SubsT
-	c *ConsT
+	c *SubsTNode
 }
 
 type S *Package
