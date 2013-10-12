@@ -38,12 +38,12 @@ func TestReasoningOverDB (t *testing.T) {
                 }
         }
 
-	if foo[0] != "Bob" { t.Fail() }
-	if foo[1] != "Tom" { t.Fail() }
-	if foo[2] != "Jill" { t.Fail() }
-	if foo[3] != "Bob" { t.Fail() }
-	if foo[4] != "Alice" { t.Fail() }
-	if foo[5] != "Tom" { t.Fail() }
+	if foo[0] != "Bob" { t.Fatal(foo[0])}
+	if foo[1] != "Tom" { t.Fatal(foo[1])}
+	if foo[2] != "Jill" { t.Fatal(foo[2])}
+	if foo[3] != "Bob" { t.Fatal(foo[3])}
+	if foo[4] != "Alice" { t.Fatal(foo[4])}
+	if foo[5] != "Tom" { t.Fatal(foo[5])}
 }
 
 type person struct {
@@ -61,4 +61,12 @@ func TestReasoningOverStructs (t *testing.T) {
 
         if "Bob" != <- c2 { t.Fail()}
 
+}
+
+func TestingGoals (t *testing.T) {
+	a,b,c:=Fresh3()
+	ch := Run(a,Or(And(Unify(a,b),Unify(b,c),Unify(c,1)),
+                       And(Unify(a,b),Unify(b,c),Unify(c,3))))
+	if 1 == <- ch {t.Fatal("not a 1")}
+	if 3 == <- ch {t.Fatal("not a 3")}
 }

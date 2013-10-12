@@ -35,39 +35,84 @@ func lvar(n string) V {
         return foo
 }
 
-func exts_no_check (n V, v interface {}, s *SubsT) *SubsT {
+func s_of(p S) *SubsT {
+	if p != nil {
+		return p.s
+	} else {
+		return nil
+	}
+}
+
+func c_of(p S) *ConsT {
+	if p != nil {
+		return p.c
+	} else {
+		return nil
+	}
+}
+
+func exts_no_check (n V, v interface {}, s S) S {
         if n == nil {
                 panic("foo")
         }
-        var news = new(SubsT)
-        news.name_=n
-        news.thing_=v
-        news.more_=s
-        return news
+	
+	a := s_of(s)
+	b := c_of(s)
+	
+	if a == nil {
+		return &Package{s:&SubsT{name:n,thing:v,more:nil},c:b}
+	} else {
+		news := &SubsT{name:n,thing:v,more:a}
+		return &Package{s:news,c:s.c}
+	}
 }
 
+// func (s SubsT) String ()  string {
+// 	buf := "|"
+// 	ss := &s
+// 	for {
+// 		if ss != nil {
+// 			buf+="["
+// 			buf+=ss.name.toString()
+// 			buf+=" "
+// 			buf+=ss.thing.toString()
+// 			buf+="]"
+// 			ss = s.more
+// 		} else {
+// 			break
+// 		}
+// 	}
+// 	buf += "|"
+// 	return buf
+// }
+
 func subst_name(s S) V {
-        return s.name_
+        return s.s.name
 }
 
 func subst_thing(s S) interface {} {
-        return s.thing_
+        return s.s.thing
 }
 
 func subst_more(s S) S {
-        if s != nil {
-                x := s.more_
-		if x != nil {
-			return &SubsT{name_:subst_name(x),thing_:subst_thing(x),more_:x.more_,c:s.c}
+        if s_of(s) != nil {
+		a := s_of(s)
+		b := c_of(s)
+		if a != nil {
+			return &Package{s:a.more,c:b}
 		} else {
-			return x
+			return &Package{s:nil,c:b}
 		}
         } else {
 		return s
 	}
 }
 
-func lookup (thing interface{}, s *SubsT) LookupResult {
+func empty_subst(s S) bool {
+	return s_of(s) == nil
+}
+
+func lookup (thing interface{}, s S) LookupResult {
         var lr LookupResult
 
         v, isvar := thing.(V)
@@ -78,7 +123,7 @@ func lookup (thing interface{}, s *SubsT) LookupResult {
                 lr.t = thing
                 return lr
         } else {
-                if s == nil {
+                if empty_subst(s) {
                         lr.Var = true
                         lr.Term = false
                         lr.v = v
@@ -96,11 +141,11 @@ func lookup (thing interface{}, s *SubsT) LookupResult {
 
 }
 
-func subst_find (v V, s *SubsT) (*SubsT, bool) {
+func subst_find (v V, s S) (S, bool) {
         // fmt.Println("==subst_find==")
         // fmt.Println(v)
         // fmt.Println(s)
-        if s == nil {
+        if empty_subst(s) {
                 return nil, false
         } else {
                 // fmt.Println("A")
@@ -117,7 +162,7 @@ func subst_find (v V, s *SubsT) (*SubsT, bool) {
         }
 }
 
-func walk (n interface {}, s *SubsT) LookupResult {
+func walk (n interface {}, s S) LookupResult {
         // fmt.Println("==walk==")
         // fmt.Println(n)
         var lr LookupResult
@@ -146,7 +191,7 @@ func walk (n interface {}, s *SubsT) LookupResult {
         }
 }
 
-func occurs_check (x V, v interface{}, s *SubsT) bool {
+func occurs_check (x V, v interface{}, s S) bool {
         thing := walk(v, s)
         if (thing.Var) {
                 return thing.v.name == x.name
@@ -168,7 +213,7 @@ func occurs_check (x V, v interface{}, s *SubsT) bool {
 
 }
 
-func ext_s (x V, v interface{}, s *SubsT) (*SubsT, bool) {
+func ext_s (x V, v interface{}, s S) (S, bool) {
         if x == nil {
                 panic("foo")
         }
@@ -181,7 +226,7 @@ func ext_s (x V, v interface{}, s *SubsT) (*SubsT, bool) {
 
 
 
-func unify (u interface{}, v interface{}, s *SubsT) (*SubsT, bool) {
+func unify (u interface{}, v interface{}, s S) (S, bool) {
         // fmt.Println("==unify==")
         u1 := walk(u,s)
         v1 := walk(v,s)
@@ -227,7 +272,7 @@ func unify (u interface{}, v interface{}, s *SubsT) (*SubsT, bool) {
         }
 }
 
-func unify_no_check (u, v, s *SubsT) (*SubsT, bool) {
+func unify_no_check (u, v, s S) (S, bool) {
         u1 := walk(u,s)
         v1 := walk(v,s)
         if u1 == v1 {
@@ -241,7 +286,7 @@ func unify_no_check (u, v, s *SubsT) (*SubsT, bool) {
         }
 }
 
-func walk_star (v LookupResult, s *SubsT) LookupResult {
+func walk_star (v LookupResult, s S) LookupResult {
         // fmt.Println("==walk_star==")
         // fmt.Println(v)
         // fmt.Println(s)
@@ -261,7 +306,7 @@ func walk_star (v LookupResult, s *SubsT) LookupResult {
         }
 }
 
-func length (s *SubsT) int32 {
+func length (s S) int32 {
         return 5
 }
 
@@ -269,7 +314,7 @@ func reify_name (x int32) string {
         return "_."
 }
 
-func reify_s (v_ LookupResult, s *SubsT) *SubsT {
+func reify_s (v_ LookupResult, s S) S {
         // fmt.Println("==reify_s==")
         var v LookupResult
         if v_.Var {
@@ -297,7 +342,7 @@ func reify_s (v_ LookupResult, s *SubsT) *SubsT {
         }
 }
 
-func reify (v_ interface{}, s *SubsT) interface{} {
+func reify (v_ interface{}, s S) interface{} {
         // fmt.Println("==reify==")
         // fmt.Println(v_)
         var lr LookupResult
@@ -327,7 +372,7 @@ func mzero () *Stream {
         return nil
 }
 
-func unit (a *SubsT) *Stream {
+func unit (a S) *Stream {
         var x = new(Stream)
         x.first = a
         x.rest = func () *Stream {
@@ -336,7 +381,7 @@ func unit (a *SubsT) *Stream {
         return x
 }
 
-func choice (a *SubsT, s func () *Stream) *Stream {
+func choice (a S, s func () *Stream) *Stream {
         var x = new(Stream)
         x.first = a
         x.rest = s
@@ -346,9 +391,11 @@ func choice (a *SubsT, s func () *Stream) *Stream {
 func Unify (u interface{}, v interface{}) Goal {
         return func (s S) R {
                 s1, unify_success := unify(u,v,s)
+		// fmt.Println(u)
+		// fmt.Println(v)
 		// fmt.Println("unify_success")
 		// fmt.Println(unify_success)
-		// fmt.Println(s1)
+		// fmt.Println(s_of(s))
                 if unify_success {
                         return unit(s1)
                 } else {

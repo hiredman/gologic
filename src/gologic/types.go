@@ -14,10 +14,9 @@ type ConsT struct {
 }
 
 type SubsT struct {
-        name_ V
-        thing_ interface {}
-        more_ *SubsT
-	c *ConsT
+        name V
+        thing interface {}
+        more *SubsT
 }
 
 type LookupResult struct {
@@ -27,7 +26,12 @@ type LookupResult struct {
         t interface{}
 }
 
-type S *SubsT
+type Package struct {
+	s *SubsT
+	c *ConsT
+}
+
+type S *Package
 
 type Stream struct {
         first S
