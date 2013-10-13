@@ -39,6 +39,13 @@ a goal constructor is a function that returns a goal
 
 See `gologic_test.go`
 
+`zebra.go` has an example of solving the zebra puzzle ported from
+Clojure's `core.logic`. You can run the example like:
+
+```sh
+GOPATH=$PWD go build zebra.go && ./zebra
+```
+
 ## License
 
 The MIT License (MIT)
