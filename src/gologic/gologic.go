@@ -159,22 +159,14 @@ func subst_find (v V, s S) (S, bool) {
 }
 
 func walk (n interface {}, s S) LookupResult {
-        // fmt.Println("==walk==")
-        // fmt.Println(n)
         var lr LookupResult
         v, visvar := n.(V)
-        // fmt.Println("visvar")
-        // fmt.Println(visvar)
-        // fmt.Println(v)
-        if !visvar  || v == nil {
+        if !visvar {
                 lr.Term = true
                 lr.Var = false
                 lr.t = n
                 return lr
         } else {
-                // fmt.Println("yoyo")
-                // fmt.Println(v)
-                // fmt.Println(s)
                 subs, subsfound := subst_find(v, s)
                 if subsfound {
                         return walk(subst_thing(subs), s)
@@ -291,9 +283,15 @@ func walk_star (v LookupResult, s S) LookupResult {
         // fmt.Println(v)
         // fmt.Println(s)
         if v.Var {
-                return walk(v.v,s)
+                x := walk(v.v,s)
+		if x.Var {
+			return x
+		} else {
+			return walk_star(x, s)
+		}
         } else {
                 if is_struct(v.t) {
+			//fmt.Println("walking struct")
 			x := zero_of(v.t)
                         var lr LookupResult
                         lr.Var = false
@@ -340,29 +338,11 @@ func reify_name (x int) string {
 
 func reify_s (v_ LookupResult, s S) S {
         //fmt.Println("==reify_s==")
-        var v LookupResult
-	//fmt.Println("a")
-        if v_.Var {
-                //fmt.Println(v_.v)
-                if v_.v == nil {
-                        panic("foo")
-                }
-		//fmt.Println("a.1")
-                v=walk(v_.v,s)
-        } else {
-                if v_.t == nil {
-                        panic("foo")
-                }
-                //fmt.Println(v_.t)
-                v=walk(v_.t,s)
-        }
-	//fmt.Println("b")
+	v := walk_star(v_,s)
         if v.Var {
                 if v.v == nil {
                         panic("foo")
                 }
-                // fmt.Println("reify here")
-                // fmt.Println(v.v)
                 s1, ok := ext_s(v.v, reify_name(length(s)), s)
                 if ok {
                         return s1
@@ -371,12 +351,10 @@ func reify_s (v_ LookupResult, s S) S {
                 }
         } else {
 		if is_struct(v.t) {
-			fmt.Println("is_struct")
+			//fmt.Println("reify struct")
 			ns := s
 			for i := 0; i < field_count(v.t); i++ {
 				x := field_by_index(v.t,i)
-				// fmt.Println("x")
-				// fmt.Println(x)
 				var t LookupResult
 				d, disvar := x.(V)
 				if disvar {
@@ -412,14 +390,16 @@ func reify (v_ interface{}, s S) interface{} {
                 lr.t = v_
         }
 
-        // fmt.Println(lr)
+	// fmt.Println(lr)
         // fmt.Println("before first ws")
         v := walk_star(lr,s)
         // fmt.Println("after first ws")
         // fmt.Println("v")
         // fmt.Println(v.Var)
         // fmt.Println(v.t)
+	// fmt.Println("before refiy_s")
         x := reify_s(v,nil)
+	// fmt.Println("after refiy_s")
         lr2 := walk_star(v, x)
         return lr2.t
 }
@@ -679,6 +659,12 @@ func unify_verify(s S, a S, unify_success bool) R {
 func Unify (u interface{}, v interface{}) Goal {
         return func (s S) R {
                 s1, unify_success := unify(u,v,s)
+		// fmt.Println("unify_success")
+		// fmt.Println(unify_success)
                 return unify_verify(s1,s,unify_success)
         }
+}
+
+func (v LVarT) String () string {
+	return "<lvar "+v.name+">"
 }

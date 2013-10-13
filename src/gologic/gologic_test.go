@@ -102,3 +102,30 @@ func TestingReifyStructs (t *testing.T) {
 		if d.A != "Hello" {t.Fatal("not Hello")}
 	}
 }
+
+func TestingReifyNestedStructs (t *testing.T) {
+        type X struct {
+                A interface {}
+        }
+
+        v,l := Fresh2()
+
+        c := Run(l,And(
+		Unify(v,X{l}),
+		Unify(l,X{"Hello"})))
+
+	z := <- c
+	
+	d, ok := z.(X)
+	if !ok {
+		t.Fatal("not an X")
+	} else {
+		b, ok1 := d.A.(X)
+		if !ok1 {
+			t.Fatal("not an X")
+		} else {
+			if b.A != "Hello" {t.Fatal("not hello")}
+			
+		}
+	}
+}
