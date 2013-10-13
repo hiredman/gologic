@@ -294,8 +294,6 @@ func walk_star (v LookupResult, s S) LookupResult {
                 return walk(v.v,s)
         } else {
                 if is_struct(v.t) {
-                        // TODO: reflectively reify structs
-                        // fmt.Println("found struct")
 			x := zero_of(v.t)
                         var lr LookupResult
                         lr.Var = false
@@ -329,7 +327,11 @@ func walk_star (v LookupResult, s S) LookupResult {
 }
 
 func length (s S) int {
-        return 5
+	if s_of(s) == nil {
+		return 0
+	} else {
+		return 1+length(subst_more(s))
+	}
 }
 
 func reify_name (x int) string {
@@ -337,18 +339,24 @@ func reify_name (x int) string {
 }
 
 func reify_s (v_ LookupResult, s S) S {
-        // fmt.Println("==reify_s==")
+        //fmt.Println("==reify_s==")
         var v LookupResult
+	//fmt.Println("a")
         if v_.Var {
-                // fmt.Println(v.v)
+                //fmt.Println(v_.v)
                 if v_.v == nil {
                         panic("foo")
                 }
-                v=walk(v.v,s)
+		//fmt.Println("a.1")
+                v=walk(v_.v,s)
         } else {
-                //fmt.Println(v.t)
-                v=walk(v.t,s)
+                if v_.t == nil {
+                        panic("foo")
+                }
+                //fmt.Println(v_.t)
+                v=walk(v_.t,s)
         }
+	//fmt.Println("b")
         if v.Var {
                 if v.v == nil {
                         panic("foo")
@@ -362,7 +370,30 @@ func reify_s (v_ LookupResult, s S) S {
                         panic("whoops")
                 }
         } else {
-                return s
+		if is_struct(v.t) {
+			fmt.Println("is_struct")
+			ns := s
+			for i := 0; i < field_count(v.t); i++ {
+				x := field_by_index(v.t,i)
+				// fmt.Println("x")
+				// fmt.Println(x)
+				var t LookupResult
+				d, disvar := x.(V)
+				if disvar {
+					t.Var = true
+					t.Term = false
+					t.v = d
+				} else {
+					t.Var = false
+					t.Term = true
+					t.t = x
+				}
+				ns = reify_s(t,ns)
+			}
+			return ns
+		} else {
+			return s
+		}
         }
 }
 
