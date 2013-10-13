@@ -24,9 +24,6 @@ more logic vars at once.
 `gologic.Run(...)` takes a logic var and a goal, and returns a channel
 (type `chan interface{}`) in to which results will be placed.
 
-`gologic.A` is a value that will unify with anything, but will not
-extend the substitution map.
-
 provided goals constructors are:
   * `gologic.Unify(a,b)`
   * `gologic.Neq(a,b)`

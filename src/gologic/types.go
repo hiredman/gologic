@@ -50,5 +50,3 @@ type db_record struct {
         Attribute interface{}
         Value interface{}
 }
-
-type Dummy struct {}

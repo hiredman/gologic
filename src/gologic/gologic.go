@@ -5,9 +5,6 @@ import "strconv"
 import "reflect"
 import "container/list"
 
-// dummy value, unifies with anything without extending the substritution
-var A = Dummy{}
-
 func is_struct (x interface{}) bool {
         //      fmt.Println("is_struct")
         v := reflect.ValueOf(x)
@@ -227,10 +224,10 @@ func unify (u interface{}, v interface{}, s S) (S, bool) {
         if u1.Term && v1.Term && !is_struct(u1.t) && !is_struct(v1.t) {
                 //fmt.Println("A")
                 return s, u1.t == v1.t
-        } else if u1.Term && u1.t == A {
-                return s, true
-        } else if v1.Term && v1.t == A {
-                return s, true
+        // } else if u1.Term && u1.t == A {
+        //         return s, true
+        // } else if v1.Term && v1.t == A {
+        //         return s, true
         } else if u1.Var {
                 // fmt.Println("B")
                 if v1.Var {
