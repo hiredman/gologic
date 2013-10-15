@@ -10,6 +10,10 @@ const (
         Sex
 )
 
+func Assert (t *testing.T, exp bool, msg interface{}) {
+	if !exp {t.Fatal(msg)}
+}
+
 func TestReasoningOverDB (t *testing.T) {
         db := Db()
         db.Assert("Bob",   Likes, "Pizza")
@@ -45,8 +49,9 @@ func TestReasoningOverDB (t *testing.T) {
                 }
         }
 
-        if foo[0] != "Jill" { t.Fatal(foo[0])}
-        if foo[1] != "Alice" { t.Fatal(foo[1])}
+	Assert(t,foo[0] == "Jill",foo[0])
+	Assert(t,foo[1] == "Alice",foo[1])
+
 }
 
 
@@ -64,14 +69,14 @@ func TestReasoningOverStructs (t *testing.T) {
 
         c2 := Run(vp, Unify(p,person{Name:vp,Last:"Villa"}))
 
-        if "Bob" != <- c2 { t.Fail()}
+	Assert(t, "Bob" == <- c2, "not bob")
 
 }
 
 func TestGoals (t *testing.T) {
         a,b,c:=Fresh3()
         ch := Run(a,Or(And(Unify(a,b),Unify(b,c),Unify(c,1)),
-                       And(Unify(a,b),Unify(b,c),Unify(c,3))))
+                And(Unify(a,b),Unify(b,c),Unify(c,3))))
         if 1 != <- ch {t.Fatal("not a 1")}
         if 3 != <- ch {t.Fatal("not a 3")}
 }
@@ -93,14 +98,14 @@ func TestReifyStructs (t *testing.T) {
 
         c := Run(v,Unify(v,X{"Hello"}))
 
-	z := <- c
+        z := <- c
 
-	d, ok := z.(X)
-	if !ok {
-		t.Fatal("not an X")
-	} else {
-		if d.A != "Hello" {t.Fatal("not Hello")}
-	}
+        d, ok := z.(X)
+        if !ok {
+                t.Fatal("not an X")
+        } else {
+                if d.A != "Hello" {t.Fatal("not Hello")}
+        }
 }
 
 func TestReifyNestedStructs (t *testing.T) {
@@ -111,18 +116,18 @@ func TestReifyNestedStructs (t *testing.T) {
         v,l := Fresh2()
 
         c := Run(l,And(
-		Unify(v,X{l}),
-		Unify(l,X{"Hello"})))
+                Unify(v,X{l}),
+                Unify(l,X{"Hello"})))
 
-	z := <- c
-	
-	d, ok := z.(X)
+        z := <- c
 
-	if !ok {
-		t.Fatal("not an X")
-	} else {
-		if d.A != "Hello" {t.Fatal("not Hello")}
-	}
+        d, ok := z.(X)
+
+        if !ok {
+                t.Fatal("not an X")
+        } else {
+                if d.A != "Hello" {t.Fatal("not Hello")}
+        }
 
 }
 
