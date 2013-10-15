@@ -10,8 +10,8 @@ func main() {
         }
         c := l.Run(v2, l.Or(l.And(l.Unify(v1,3),
                                   l.Unify(v2,v1),
-                                  l.Unify(v1,l.A),
-		                  l.Unify(10,l.A),
+                                  l.Unify(v1,l.Fresh()),
+		                  l.Unify(10,l.Fresh()),
                                   g(1,1)),
                             l.Unify(v2,5),
                             l.Unify(v2,8)))
