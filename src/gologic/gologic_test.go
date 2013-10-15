@@ -131,8 +131,24 @@ func TestReifyNestedStructs (t *testing.T) {
 
 }
 
-// func TestGenealogy (t *testing.T) {
-// 	db := Db()
-// 	db.Assert("John","parent","Boby")
-// 	db.assert("Bobby","is","male")
-// }
+func ancestoro (db DB, a,b interface{}) Goal {
+        c := Fresh()
+        g := Or(db.Find(a,"parent",b),
+                And(db.Find(a,"parent",c),
+                    Call(ancestoro,db,c,b)))
+        return g
+}
+
+func TestGenealogy (t *testing.T) {
+        db := Db()
+        db.Assert("bill","parent","mary")
+        db.Assert("mary","parent","john")
+
+	q := Fresh()
+	c := Run(q,ancestoro(db,"bill",q))
+
+	x := <- c
+	
+	Assert(t,x == "mary","not mary")
+
+}
