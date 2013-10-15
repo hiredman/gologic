@@ -23,7 +23,7 @@ func type_name (x interface {}) string {
 func zero_of (x interface {}) reflect.Value {
         v := reflect.ValueOf(x)
         t := v.Type()
-	c := reflect.New(t)
+        c := reflect.New(t)
         return c
 }
 
@@ -224,10 +224,10 @@ func unify (u interface{}, v interface{}, s S) (S, bool) {
         if u1.Term && v1.Term && !is_struct(u1.t) && !is_struct(v1.t) {
                 //fmt.Println("A")
                 return s, u1.t == v1.t
-        // } else if u1.Term && u1.t == A {
-        //         return s, true
-        // } else if v1.Term && v1.t == A {
-        //         return s, true
+                // } else if u1.Term && u1.t == A {
+                //         return s, true
+                // } else if v1.Term && v1.t == A {
+                //         return s, true
         } else if u1.Var {
                 // fmt.Println("B")
                 if v1.Var {
@@ -281,15 +281,15 @@ func walk_star (v LookupResult, s S) LookupResult {
         // fmt.Println(s)
         if v.Var {
                 x := walk(v.v,s)
-		if x.Var {
-			return x
-		} else {
-			return walk_star(x, s)
-		}
+                if x.Var {
+                        return x
+                } else {
+                        return walk_star(x, s)
+                }
         } else {
                 if is_struct(v.t) {
-			//fmt.Println("walking struct")
-			x := zero_of(v.t)
+                        //fmt.Println("walking struct")
+                        x := zero_of(v.t)
                         var lr LookupResult
                         lr.Var = false
                         lr.Term = true
@@ -313,7 +313,7 @@ func walk_star (v LookupResult, s S) LookupResult {
                                         set_field(x,i,c.t)
                                 }
                         }
-			lr.t = x.Elem().Interface()
+                        lr.t = x.Elem().Interface()
                         return lr
                 } else {
                         return walk(v.t,s)
@@ -322,11 +322,11 @@ func walk_star (v LookupResult, s S) LookupResult {
 }
 
 func length (s S) int {
-	if s_of(s) == nil {
-		return 0
-	} else {
-		return 1+length(subst_more(s))
-	}
+        if s_of(s) == nil {
+                return 0
+        } else {
+                return 1+length(subst_more(s))
+        }
 }
 
 func reify_name (x int) string {
@@ -335,7 +335,7 @@ func reify_name (x int) string {
 
 func reify_s (v_ LookupResult, s S) S {
         //fmt.Println("==reify_s==")
-	v := walk_star(v_,s)
+        v := walk_star(v_,s)
         if v.Var {
                 if v.v == nil {
                         panic("foo")
@@ -347,28 +347,28 @@ func reify_s (v_ LookupResult, s S) S {
                         panic("whoops")
                 }
         } else {
-		if is_struct(v.t) {
-			//fmt.Println("reify struct")
-			ns := s
-			for i := 0; i < field_count(v.t); i++ {
-				x := field_by_index(v.t,i)
-				var t LookupResult
-				d, disvar := x.(V)
-				if disvar {
-					t.Var = true
-					t.Term = false
-					t.v = d
-				} else {
-					t.Var = false
-					t.Term = true
-					t.t = x
-				}
-				ns = reify_s(t,ns)
-			}
-			return ns
-		} else {
-			return s
-		}
+                if is_struct(v.t) {
+                        //fmt.Println("reify struct")
+                        ns := s
+                        for i := 0; i < field_count(v.t); i++ {
+                                x := field_by_index(v.t,i)
+                                var t LookupResult
+                                d, disvar := x.(V)
+                                if disvar {
+                                        t.Var = true
+                                        t.Term = false
+                                        t.v = d
+                                } else {
+                                        t.Var = false
+                                        t.Term = true
+                                        t.t = x
+                                }
+                                ns = reify_s(t,ns)
+                        }
+                        return ns
+                } else {
+                        return s
+                }
         }
 }
 
@@ -387,16 +387,16 @@ func reify (v_ interface{}, s S) interface{} {
                 lr.t = v_
         }
 
-	// fmt.Println(lr)
+        // fmt.Println(lr)
         // fmt.Println("before first ws")
         v := walk_star(lr,s)
         // fmt.Println("after first ws")
         // fmt.Println("v")
         // fmt.Println(v.Var)
         // fmt.Println(v.t)
-	// fmt.Println("before refiy_s")
+        // fmt.Println("before refiy_s")
         x := reify_s(v,nil)
-	// fmt.Println("after refiy_s")
+        // fmt.Println("after refiy_s")
         lr2 := walk_star(v, x)
         return lr2.t
 }
@@ -564,11 +564,13 @@ func (d DB) Assert (entity interface{}, attribute interface{}, value interface{}
 
 func (d DB) Find (entity interface{}, attribute interface{}, value interface{}) Goal {
         r := db_record{Entity:entity,Attribute:attribute,Value:value}
-        g := Fail()
-        for e := d.l.Front(); e != nil; e = e.Next() {
-                g = Or(g,Unify(r,e.Value))
+        return func (s S) R {
+                g := Fail()
+                for e := d.l.Front(); e != nil; e = e.Next() {
+                        g = Or(g,Unify(r,e.Value))
+                }
+		return g(s)
         }
-        return g
 }
 
 func cons_c (c *SubsT, cs *SubsTNode) *SubsTNode {
@@ -656,14 +658,16 @@ func unify_verify(s S, a S, unify_success bool) R {
 func Unify (u interface{}, v interface{}) Goal {
         return func (s S) R {
                 s1, unify_success := unify(u,v,s)
-		// fmt.Println("unify_success")
-		// fmt.Println(unify_success)
+                // fmt.Println("unify_success")
+                // fmt.Println(unify_success)
                 return unify_verify(s1,s,unify_success)
         }
 }
 
 func (v LVarT) String () string {
-	return "<lvar "+v.name+">"
+        return "<lvar "+v.name+">"
+}
+
 // helper for constructing recursive goals
 func Call(constructor interface{}, args ...interface{}) Goal {
 	var foo []reflect.Value = make([]reflect.Value, len(args))
