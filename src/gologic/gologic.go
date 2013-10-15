@@ -664,4 +664,22 @@ func Unify (u interface{}, v interface{}) Goal {
 
 func (v LVarT) String () string {
 	return "<lvar "+v.name+">"
+// helper for constructing recursive goals
+func Call(constructor interface{}, args ...interface{}) Goal {
+	var foo []reflect.Value = make([]reflect.Value, len(args))
+	for i,e := range args {
+		foo[i] = reflect.ValueOf(e)
+	}
+	fun := reflect.ValueOf(constructor)
+	return func (s S) R {
+		r := fun.Call(foo)
+		x := r[0].Interface()
+		g,ok := x.(Goal)
+		if ok {
+			return g(s)
+		} else {
+			panic("whoops")
+		}
+		
+	}
 }
