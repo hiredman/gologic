@@ -68,23 +68,23 @@ func TestReasoningOverStructs (t *testing.T) {
 
 }
 
-func TestingGoals (t *testing.T) {
+func TestGoals (t *testing.T) {
         a,b,c:=Fresh3()
         ch := Run(a,Or(And(Unify(a,b),Unify(b,c),Unify(c,1)),
-                And(Unify(a,b),Unify(b,c),Unify(c,3))))
-        if 1 == <- ch {t.Fatal("not a 1")}
-        if 3 == <- ch {t.Fatal("not a 3")}
+                       And(Unify(a,b),Unify(b,c),Unify(c,3))))
+        if 1 != <- ch {t.Fatal("not a 1")}
+        if 3 != <- ch {t.Fatal("not a 3")}
 }
 
-func TestingInequality (t *testing.T) {
+func TestInequality (t *testing.T) {
         a,b,c:=Fresh3()
         ch := Run(a,Or(And(Unify(a,b),Unify(b,c),Unify(c,1)),
                 And(Unify(a,b),Unify(b,c),Unify(c,3),Neq(c,3))))
-        if 1 == <- ch {t.Fatal("not a 1")}
-        if nil == <- ch {t.Fatal("not closed")}
+        if 1 != <- ch {t.Fatal("not a 1")}
+        if nil != <- ch {t.Fatal("not closed")}
 }
 
-func TestingReifyStructs (t *testing.T) {
+func TestReifyStructs (t *testing.T) {
         type X struct {
                 A interface {}
         }
@@ -94,7 +94,7 @@ func TestingReifyStructs (t *testing.T) {
         c := Run(v,Unify(v,X{"Hello"}))
 
 	z := <- c
-	
+
 	d, ok := z.(X)
 	if !ok {
 		t.Fatal("not an X")
@@ -103,7 +103,7 @@ func TestingReifyStructs (t *testing.T) {
 	}
 }
 
-func TestingReifyNestedStructs (t *testing.T) {
+func TestReifyNestedStructs (t *testing.T) {
         type X struct {
                 A interface {}
         }
@@ -117,15 +117,17 @@ func TestingReifyNestedStructs (t *testing.T) {
 	z := <- c
 	
 	d, ok := z.(X)
+
 	if !ok {
 		t.Fatal("not an X")
 	} else {
-		b, ok1 := d.A.(X)
-		if !ok1 {
-			t.Fatal("not an X")
-		} else {
-			if b.A != "Hello" {t.Fatal("not hello")}
-			
-		}
+		if d.A != "Hello" {t.Fatal("not Hello")}
 	}
+
 }
+
+// func TestGenealogy (t *testing.T) {
+// 	db := Db()
+// 	db.Assert("John","parent","Boby")
+// 	db.assert("Bobby","is","male")
+// }
