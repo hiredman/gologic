@@ -1,7 +1,6 @@
 package gologic
 
 // a db is sort of like an clojure agent containing a linked list
-
 func Db () DB {
         var db *DBCons = nil
         c := make(chan func (*DBCons) *DBCons)

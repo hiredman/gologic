@@ -431,6 +431,7 @@ func reify_as_list (v V, s *Stream, c chan interface{}) {
         }
 }
 
+// Run takes a logic variable to solve for, and a goal
 func Run (v V, g Goal) chan interface{} {
         c := make(chan interface{})
         go func () {
@@ -451,6 +452,7 @@ func init () {
         }()
 }
 
+// Fresh returns a new logic variable
 func Fresh() V {
         foo := new(LVarT)
         foo.id = <- c
@@ -506,6 +508,7 @@ func neq_verify(s *SubsT, a S, unify_success bool) R {
 }
 
 
+// Neq returns a goal that suceeds when u and v do not unify
 func Neq (u interface{}, v interface{}) Goal {
         return func (s S) R {
                 s1, unify_success := unify(u,v,s)
@@ -559,6 +562,7 @@ func unify_verify(s S, a S, unify_success bool) R {
         }
 }
 
+// Unify returns a goal that succeeds when u and v unify
 func Unify (u interface{}, v interface{}) Goal {
         return func (s S) R {
                 s1, unify_success := unify(u,v,s)
