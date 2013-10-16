@@ -324,8 +324,8 @@ func length (s S) int {
         }
 }
 
-func reify_name (x int) string {
-        return "_."+strconv.Itoa(x)
+func reify_name (x int) Symbol {
+        return Symbol{"_."+strconv.Itoa(x)}
 }
 
 func reify_s (v_ LookupResult, s S) S {
@@ -642,9 +642,14 @@ func (v LVarT) String () string {
         return "<lvar "+string(v.id)+">"
 }
 
+func (v Symbol) String () string {
+        return v.Name
+}
+
+
 // helper for constructing recursive goals
 func Call(constructor interface{}, args ...interface{}) Goal {
-	var foo []reflect.Value = make([]reflect.Value, len(args))
+	foo := make([]reflect.Value, len(args))
 	for i,e := range args {
 		foo[i] = reflect.ValueOf(e)
 	}

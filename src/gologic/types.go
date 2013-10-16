@@ -58,3 +58,7 @@ type DB struct {
 type DBValue struct {
         d *DBCons
 }
+
+type Symbol struct {
+	Name string
+}
