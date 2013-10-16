@@ -1,7 +1,7 @@
 package gologic
 
 type LVarT struct {
-        name string
+        id int
 }
 
 type V *LVarT

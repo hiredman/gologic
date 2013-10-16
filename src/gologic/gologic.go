@@ -2,7 +2,9 @@
 package gologic
 //import "fmt"
 import "strconv"
-import "reflect"
+import "reflect" 
+
+var c chan int
 
 func is_struct (x interface{}) bool {
         //      fmt.Println("is_struct")
@@ -38,12 +40,6 @@ func field_by_index (x interface{}, i int) interface {} {
 
 func set_field (x reflect.Value, i int, y interface {}) {
         x.Elem().Field(i).Set(reflect.ValueOf(y))
-}
-
-func lvar(n string) V {
-        var foo = new(LVarT)
-        foo.name=n
-        return foo
 }
 
 func s_of(p S) *SubsT {
@@ -120,7 +116,7 @@ func lookup (thing interface{}, s S) LookupResult {
                         lr.Term = false
                         lr.v = v
                         return lr
-                } else if subst_name(s).name == v.name {
+                } else if subst_name(s) == v {
                         lr.Var = false
                         lr.Term = true
                         lr.t = subst_thing(s)
@@ -146,7 +142,7 @@ func subst_find (v V, s S) (S, bool) {
                 // fmt.Println(s)
                 // fmt.Println("C")
                 // fmt.Println(s.name)
-                if v.name == subst_name(s).name {
+                if v == subst_name(s) {
                         return s, true
                 } else {
                         return subst_find(v, subst_more(s))
@@ -178,7 +174,7 @@ func walk (n interface {}, s S) LookupResult {
 func occurs_check (x V, v interface{}, s S) bool {
         thing := walk(v, s)
         if (thing.Var) {
-                return thing.v.name == x.name
+                return thing.v == x
         } else {
                 if is_struct(x) {
                         for i := 0; i < field_count(x); i++ {
@@ -514,7 +510,7 @@ func Run (v V, g Goal) chan interface{} {
         return c
 }
 
-var c chan int
+
 
 func init () {
         c = make (chan int)
@@ -526,9 +522,9 @@ func init () {
 }
 
 func Fresh() V {
-        var i int
-        i = <- c
-        return lvar("var"+strconv.Itoa(i))
+	var foo = new(LVarT)
+        foo.id = <- c
+        return foo
 }
 
 func Fresh2() (V,V) {
@@ -643,7 +639,7 @@ func Unify (u interface{}, v interface{}) Goal {
 }
 
 func (v LVarT) String () string {
-        return "<lvar "+v.name+">"
+        return "<lvar "+string(v.id)+">"
 }
 
 // helper for constructing recursive goals
