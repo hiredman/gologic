@@ -1,18 +1,14 @@
 // http://gradworks.umi.com/3380156.pdf
 package gologic
-//import "fmt"
 import "strconv"
-import "reflect" 
+import "reflect"
 
 var c chan int
 
 func is_struct (x interface{}) bool {
-        //      fmt.Println("is_struct")
         v := reflect.ValueOf(x)
         k := v.Kind()
-        //    fmt.Println(k == reflect.Struct)
         return k == reflect.Struct
-
         }
 
 func type_name (x interface {}) string {
@@ -100,48 +96,41 @@ func empty_subst(s S) bool {
         return s_of(s) == nil
 }
 
+func AVar(v V) LookupResult {
+	var lr LookupResult
+        lr.Var = true
+        lr.Term = false
+        lr.v = v
+        return lr
+}
+
+func ATerm(t interface{}) LookupResult {
+	var lr LookupResult
+        lr.Var = false
+        lr.Term = true
+        lr.t = t
+        return lr
+}
+
 func lookup (thing interface{}, s S) LookupResult {
-        var lr LookupResult
-
         v, isvar := thing.(V)
-
         if !isvar {
-                lr.Var = false
-                lr.Term = true
-                lr.t = thing
-                return lr
+		return ATerm(thing)
         } else {
                 if empty_subst(s) {
-                        lr.Var = true
-                        lr.Term = false
-                        lr.v = v
-                        return lr
+			return AVar(v)
                 } else if subst_name(s) == v {
-                        lr.Var = false
-                        lr.Term = true
-                        lr.t = subst_thing(s)
-                        return lr
+			return ATerm(subst_thing(s))
                 } else {
                         return lookup(thing,subst_more(s))
                 }
-
         }
-
 }
 
 func subst_find (v V, s S) (S, bool) {
-        // fmt.Println("==subst_find==")
-        // fmt.Println(v)
-        // fmt.Println(s)
         if empty_subst(s) {
                 return nil, false
         } else {
-                // fmt.Println("A")
-                // fmt.Println(v.name)
-                // fmt.Println("B")
-                // fmt.Println(s)
-                // fmt.Println("C")
-                // fmt.Println(s.name)
                 if v == subst_name(s) {
                         return s, true
                 } else {
@@ -151,22 +140,15 @@ func subst_find (v V, s S) (S, bool) {
 }
 
 func walk (n interface {}, s S) LookupResult {
-        var lr LookupResult
         v, visvar := n.(V)
         if !visvar {
-                lr.Term = true
-                lr.Var = false
-                lr.t = n
-                return lr
+		return ATerm(n)
         } else {
                 subs, subsfound := subst_find(v, s)
                 if subsfound {
                         return walk(subst_thing(subs), s)
                 } else {
-                        lr.Var = true
-                        lr.Term = false
-                        lr.v = v
-                        return lr
+			return AVar(v)
                 }
         }
 }
@@ -204,55 +186,32 @@ func ext_s (x V, v interface{}, s S) (S, bool) {
         }
 }
 
-
-
 func unify (u interface{}, v interface{}, s S) (S, bool) {
-        // fmt.Println("==unify==")
         u1 := walk(u,s)
         v1 := walk(v,s)
-
-        // fmt.Println("u")
-        // fmt.Println(u1.t)
-        // fmt.Println("v")
-        // fmt.Println(v1.v)
-
         if u1.Term && v1.Term && !is_struct(u1.t) && !is_struct(v1.t) {
-                //fmt.Println("A")
                 return s, u1.t == v1.t
-                // } else if u1.Term && u1.t == A {
-                //         return s, true
-                // } else if v1.Term && v1.t == A {
-                //         return s, true
+        } else if u1.Var && v1.Var {
+                return exts_no_check(u1.v, v1.v, s), true
         } else if u1.Var {
-                // fmt.Println("B")
-                if v1.Var {
-                        // fmt.Println("B.1")
-                        return exts_no_check(u1.v, v1.v, s), true
-                } else {
-                        // fmt.Println("B.2")
-                        return ext_s(u1.v, v1.t, s)
-                }
+                return ext_s(u1.v, v1.t, s)
         } else if v1.Var {
-                // fmt.Println("C")
                 return ext_s(v1.v,u1.t,s)
-        } else {
-                if is_struct(u1.t) &&
-                        is_struct(v1.t) &&
-                        (type_name(u1.t) == type_name(v1.t)) &&
-                        (field_count(v1.t) == field_count(u1.t)) {
-                        //                      fmt.Println("Here")
-                        ns := s
-                        for i := 0 ; i < field_count(v1.t); i++  {
-                                n, ok := unify(field_by_index(u1.t,i),field_by_index(v1.t,i),ns)
-                                if !ok {
-                                        return ns, false
-                                }
-                                ns = n
+        } else if is_struct(u1.t) &&
+                is_struct(v1.t) &&
+                (type_name(u1.t) == type_name(v1.t)) &&
+                (field_count(v1.t) == field_count(u1.t)) {
+                ns := s
+                for i := 0 ; i < field_count(v1.t); i++  {
+                        n, ok := unify(field_by_index(u1.t,i),field_by_index(v1.t,i),ns)
+                        if !ok {
+                                return ns, false
                         }
-                        return ns, true
-                } else {
-                        return s, false
+                        ns = n
                 }
+                return ns, true
+        } else {
+                return s, false
         }
 }
 
@@ -271,9 +230,6 @@ func unify_no_check (u, v, s S) (S, bool) {
 }
 
 func walk_star (v LookupResult, s S) LookupResult {
-        // fmt.Println("==walk_star==")
-        // fmt.Println(v)
-        // fmt.Println(s)
         if v.Var {
                 x := walk(v.v,s)
                 if x.Var {
@@ -283,7 +239,6 @@ func walk_star (v LookupResult, s S) LookupResult {
                 }
         } else {
                 if is_struct(v.t) {
-                        //fmt.Println("walking struct")
                         x := zero_of(v.t)
                         var lr LookupResult
                         lr.Var = false
@@ -293,13 +248,9 @@ func walk_star (v LookupResult, s S) LookupResult {
                                 var b LookupResult
                                 vt, vtisvar := a.(V)
                                 if vtisvar {
-                                        b.Var = true
-                                        b.Term = false
-                                        b.v = vt
+					b = AVar(vt)
                                 } else {
-                                        b.Var = false
-                                        b.Term = true
-                                        b.t = a
+					b = ATerm(a)
                                 }
                                 c := walk_star(b,s)
                                 if c.Var {
@@ -329,7 +280,6 @@ func reify_name (x int) Symbol {
 }
 
 func reify_s (v_ LookupResult, s S) S {
-        //fmt.Println("==reify_s==")
         v := walk_star(v_,s)
         if v.Var {
                 if v.v == nil {
@@ -343,20 +293,15 @@ func reify_s (v_ LookupResult, s S) S {
                 }
         } else {
                 if is_struct(v.t) {
-                        //fmt.Println("reify struct")
                         ns := s
                         for i := 0; i < field_count(v.t); i++ {
                                 x := field_by_index(v.t,i)
                                 var t LookupResult
                                 d, disvar := x.(V)
                                 if disvar {
-                                        t.Var = true
-                                        t.Term = false
-                                        t.v = d
+					t = AVar(d)
                                 } else {
-                                        t.Var = false
-                                        t.Term = true
-                                        t.t = x
+					t = ATerm(x)
                                 }
                                 ns = reify_s(t,ns)
                         }
@@ -368,30 +313,15 @@ func reify_s (v_ LookupResult, s S) S {
 }
 
 func reify (v_ interface{}, s S) interface{} {
-        // fmt.Println("==reify==")
-        // fmt.Println(v_)
         var lr LookupResult
         va, vaisvar := v_.(V)
         if vaisvar {
-                lr.Var = true
-                lr.Term = false
-                lr.v = va
+		lr = AVar(va)
         } else {
-                lr.Var = false
-                lr.Term = true
-                lr.t = v_
+		lr = ATerm(v_)
         }
-
-        // fmt.Println(lr)
-        // fmt.Println("before first ws")
         v := walk_star(lr,s)
-        // fmt.Println("after first ws")
-        // fmt.Println("v")
-        // fmt.Println(v.Var)
-        // fmt.Println(v.t)
-        // fmt.Println("before refiy_s")
         x := reify_s(v,nil)
-        // fmt.Println("after refiy_s")
         lr2 := walk_star(v, x)
         return lr2.t
 }
@@ -513,7 +443,7 @@ func Run (v V, g Goal) chan interface{} {
 
 
 func init () {
-        c = make (chan int)
+        c = make(chan int, 10)
         go func () {
                 for i := 0; true; i++ {
                         c <- i
@@ -522,7 +452,7 @@ func init () {
 }
 
 func Fresh() V {
-	var foo = new(LVarT)
+        foo := new(LVarT)
         foo.id = <- c
         return foo
 }
@@ -632,8 +562,6 @@ func unify_verify(s S, a S, unify_success bool) R {
 func Unify (u interface{}, v interface{}) Goal {
         return func (s S) R {
                 s1, unify_success := unify(u,v,s)
-                // fmt.Println("unify_success")
-                // fmt.Println(unify_success)
                 return unify_verify(s1,s,unify_success)
         }
 }
@@ -646,23 +574,22 @@ func (v Symbol) String () string {
         return v.Name
 }
 
-
 // helper for constructing recursive goals
 func Call(constructor interface{}, args ...interface{}) Goal {
-	foo := make([]reflect.Value, len(args))
-	for i,e := range args {
-		foo[i] = reflect.ValueOf(e)
-	}
-	fun := reflect.ValueOf(constructor)
-	return func (s S) R {
-		r := fun.Call(foo)
-		x := r[0].Interface()
-		g,ok := x.(Goal)
-		if ok {
-			return g(s)
-		} else {
-			panic("whoops")
-		}
-		
-	}
+        foo := make([]reflect.Value, len(args))
+        for i,e := range args {
+                foo[i] = reflect.ValueOf(e)
+        }
+        fun := reflect.ValueOf(constructor)
+        return func (s S) R {
+                r := fun.Call(foo)
+                x := r[0].Interface()
+                g,ok := x.(Goal)
+                if ok {
+                        return g(s)
+                } else {
+                        panic("whoops")
+                }
+
+        }
 }
