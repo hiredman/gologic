@@ -11,7 +11,7 @@ const (
 )
 
 func Assert (t *testing.T, exp bool, msg interface{}) {
-	if !exp {t.Fatal(msg)}
+        if !exp {t.Fatal(msg)}
 }
 
 func TestReasoningOverDB (t *testing.T) {
@@ -31,12 +31,14 @@ func TestReasoningOverDB (t *testing.T) {
 
         who, something := Fresh2()
 
+        d := db.Deref()
+
         // match.com, for triples!
-        c3 := Run(who, And(db.Find("Bob", Likes, something),
-                           db.Find(who, Likes, something),
-                           Or(db.Find(something, Is, "cheap"),
-                              db.Find(something, Is, "delicious")),
-                           db.Find(who, Sex, "female")))
+        c3 := Run(who, And(d.Find("Bob", Likes, something),
+                           d.Find(who, Likes, something),
+                           Or(d.Find(something, Is, "cheap"),
+                              d.Find(something, Is, "delicious")),
+                              d.Find(who, Sex, "female")))
 
         var foo [2]interface{}
 
@@ -48,9 +50,9 @@ func TestReasoningOverDB (t *testing.T) {
                         break
                 }
         }
-
-	Assert(t,foo[0] == "Jill",foo[0])
-	Assert(t,foo[1] == "Alice",foo[1])
+	
+        Assert(t,foo[0] == "Alice",foo[0])
+        Assert(t,foo[1] == "Jill",foo[1])
 
 }
 
@@ -63,23 +65,23 @@ func TestReasoningOverStructs (t *testing.T) {
         p := person{Name:"Bob",Last:"Villa"}
         vp := Fresh()
         c2 := Run(vp, Unify(p,person{Name:vp,Last:"Villa"}))
-	Assert(t, "Bob" == <- c2, "not bob")
+        Assert(t, "Bob" == <- c2, "not bob")
 }
 
 func TestGoals (t *testing.T) {
         a,b,c:=Fresh3()
         ch := Run(a,Or(And(Unify(a,b),Unify(b,c),Unify(c,1)),
-                       And(Unify(a,b),Unify(b,c),Unify(c,3))))
-	Assert(t,1 == <- ch,"not a 1")
-	Assert(t,3 == <- ch,"not a 3")
+                And(Unify(a,b),Unify(b,c),Unify(c,3))))
+        Assert(t,1 == <- ch,"not a 1")
+        Assert(t,3 == <- ch,"not a 3")
 }
 
 func TestInequality (t *testing.T) {
         a,b,c:=Fresh3()
         ch := Run(a,Or(And(Unify(a,b),Unify(b,c),Unify(c,1)),
-                       And(Unify(a,b),Unify(b,c),Unify(c,3),Neq(c,3))))
-	Assert(t, 1 == <- ch, "not an 1")
-	Assert(t, nil == <- ch, "not closed")
+                And(Unify(a,b),Unify(b,c),Unify(c,3),Neq(c,3))))
+        Assert(t, 1 == <- ch, "not an 1")
+        Assert(t, nil == <- ch, "not closed")
 }
 
 func TestReifyStructs (t *testing.T) {
@@ -90,8 +92,8 @@ func TestReifyStructs (t *testing.T) {
         c := Run(v,Unify(v,X{"Hello"}))
         z := <- c
         d, ok := z.(X)
-	Assert(t,ok,"not an X")
-	Assert(t,d.A == "Hello","not Hello")
+        Assert(t,ok,"not an X")
+        Assert(t,d.A == "Hello","not Hello")
 }
 
 func TestReifyNestedStructs (t *testing.T) {
@@ -102,23 +104,24 @@ func TestReifyNestedStructs (t *testing.T) {
         c := Run(l,And(Unify(v,X{l}), Unify(l,X{"Hello"})))
         z := <- c
         d, ok := z.(X)
-	Assert(t,ok,"not an X")
-	Assert(t,d.A == "Hello","not Hello")
+        Assert(t,ok,"not an X")
+        Assert(t,d.A == "Hello","not Hello")
 }
 
-func ancestoro (db DB, a,b interface{}) Goal {
+func ancestoro (db DBValue, a,b interface{}) Goal {
         c := Fresh()
         return Or(db.Find(a,"parent",b),
-                  And(db.Find(a,"parent",c),
-                      Call(ancestoro,db,c,b)))
+                And(db.Find(a,"parent",c),
+                Call(ancestoro,db,c,b)))
 }
 
 func TestGenealogy (t *testing.T) {
         db := Db()
         db.Assert("bill","parent","mary")
         db.Assert("mary","parent","john")
-	q := Fresh()
-	c := Run(q,ancestoro(db,"bill",q))
-	Assert(t,<- c == "mary","not mary")
-	Assert(t,<- c == "john","not mary")
+        q := Fresh()
+	v := db.Deref()
+        c := Run(q,ancestoro(v,"bill",q))
+        Assert(t,<- c == "mary","not mary")
+        Assert(t,<- c == "john","not mary")
 }

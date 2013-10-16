@@ -3,7 +3,6 @@ package gologic
 //import "fmt"
 import "strconv"
 import "reflect"
-import "container/list"
 
 func is_struct (x interface{}) bool {
         //      fmt.Println("is_struct")
@@ -550,27 +549,6 @@ func Fresh5() (V,V,V,V,V) {
 
 func Fresh6() (V,V,V,V,V,V) {
         return Fresh(), Fresh(), Fresh(), Fresh(), Fresh(), Fresh()
-}
-
-func Db () DB {
-        var x DB
-        x.l = new(list.List)
-        return x
-}
-
-func (d DB) Assert (entity interface{}, attribute interface{}, value interface{}) {
-        d.l.PushBack(db_record{Entity:entity,Attribute:attribute,Value:value})
-}
-
-func (d DB) Find (entity interface{}, attribute interface{}, value interface{}) Goal {
-        r := db_record{Entity:entity,Attribute:attribute,Value:value}
-        return func (s S) R {
-                g := Fail()
-                for e := d.l.Front(); e != nil; e = e.Next() {
-                        g = Or(g,Unify(r,e.Value))
-                }
-		return g(s)
-        }
 }
 
 func cons_c (c *SubsT, cs *SubsTNode) *SubsTNode {

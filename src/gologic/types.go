@@ -1,5 +1,4 @@
 package gologic
-import "container/list"
 
 type LVarT struct {
         name string
@@ -41,12 +40,21 @@ type R *Stream
 
 type Goal func(S) R
 
-type DB struct {
-        l *list.List
-}
-
 type db_record struct {
         Entity interface{}
         Attribute interface{}
         Value interface{}
+}
+
+type DBCons struct {
+        car db_record
+        cdr *DBCons
+}
+
+type DB struct {
+        c chan func (*DBCons) *DBCons
+}
+
+type DBValue struct {
+        d *DBCons
 }
