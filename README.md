@@ -43,6 +43,11 @@ Clojure's `core.logic`. You can run the example like:
 GOPATH=$PWD go build zebra.go && ./zebra
 ```
 
+`gologic.Call` is a goal constructor that is a useful helper for
+constructing recursive goals, by delaying the recursive call to the
+goal constructor until the logic program is being run. See `ancestoro`
+in `gologic_test.go`
+
 ## License
 
 The MIT License (MIT)

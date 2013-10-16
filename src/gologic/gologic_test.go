@@ -112,6 +112,7 @@ func ancestoro (db DBValue, a,b interface{}) Goal {
         c := Fresh()
         return Or(db.Find(a,"parent",b),
                 And(db.Find(a,"parent",c),
+		// Call delays calling the goal constructor till goal execution time
                 Call(ancestoro,db,c,b)))
 }
 
