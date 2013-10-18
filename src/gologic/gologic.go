@@ -11,10 +11,9 @@ func is_struct (x interface{}) bool {
         return k == reflect.Struct
         }
 
-func type_name (x interface {}) string {
+func type_of (x interface {}) reflect.Type {
         v := reflect.ValueOf(x)
-        t := v.Type()
-        return t.PkgPath()+"/"+t.Name()
+        return v.Type()
 }
 
 func zero_of (x interface {}) reflect.Value {
@@ -199,7 +198,7 @@ func unify (u interface{}, v interface{}, s S) (S, bool) {
                 return ext_s(v1.v,u1.t,s)
         } else if is_struct(u1.t) &&
                 is_struct(v1.t) &&
-                (type_name(u1.t) == type_name(v1.t)) &&
+                (type_of(u1.t) == type_of(v1.t)) &&
                 (field_count(v1.t) == field_count(u1.t)) {
                 ns := s
                 for i := 0 ; i < field_count(v1.t); i++  {
