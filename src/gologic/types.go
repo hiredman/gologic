@@ -60,5 +60,5 @@ type DBValue struct {
 }
 
 type Symbol struct {
-	Name string
+	name string
 }

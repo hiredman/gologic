@@ -28,13 +28,28 @@ func field_count (x interface{}) int {
         return v.NumField()
 }
 
-func field_by_index (x interface{}, i int) interface {} {
+func field_by_index (x interface{}, i int) (foo interface {}) {
+	defer func () {
+		r := recover()
+		if r != nil {
+			foo = <- c
+		}
+	}()
         v := reflect.ValueOf(x)
-        return v.Field(i).Interface()
+        foo = v.Field(i).Interface()
+	return foo
 }
 
-func set_field (x reflect.Value, i int, y interface {}) {
+func set_field (x reflect.Value, i int, y interface {}) (success bool) {
+	defer func () {
+		r := recover()
+		if r != nil {
+			success = false
+		}
+	}()
         x.Elem().Field(i).Set(reflect.ValueOf(y))
+	success = true
+	return success
 }
 
 func s_of(p S) *SubsT {
@@ -252,11 +267,15 @@ func walk_star (v LookupResult, s S) LookupResult {
 					b = ATerm(a)
                                 }
                                 c := walk_star(b,s)
+				good_set := false
                                 if c.Var {
-                                        set_field(x,i,c.v)
+                                        good_set = set_field(x,i,c.v)
                                 } else {
-                                        set_field(x,i,c.t)
+                                        good_set = set_field(x,i,c.t)
                                 }
+				if !good_set {
+					return v
+				}
                         }
                         lr.t = x.Elem().Interface()
                         return lr
@@ -533,7 +552,7 @@ func (v LVarT) String () string {
 }
 
 func (v Symbol) String () string {
-        return v.Name
+        return v.name
 }
 
 // helper for constructing recursive goals
