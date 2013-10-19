@@ -5,6 +5,8 @@ import "reflect"
 
 var c chan int
 
+var U Unique = Unique{}
+
 func is_struct (x interface{}) bool {
         v := reflect.ValueOf(x)
         k := v.Kind()
@@ -32,7 +34,7 @@ func field_by_index (x interface{}, i int) (foo interface {}) {
 	defer func () {
 		r := recover()
 		if r != nil {
-			foo = <- c
+			foo = U
 		}
 	}()
         v := reflect.ValueOf(x)
@@ -205,6 +207,8 @@ func unify (u interface{}, v interface{}, s S) (S, bool) {
         v1 := walk(v,s)
         if u1.Term && v1.Term && !is_struct(u1.t) && !is_struct(v1.t) {
                 return s, u1.t == v1.t
+        } else if (u1.Term || v1.Term) && (u1.t == U || v1.t == U) {
+		return s,false
         } else if u1.Var && v1.Var {
                 return exts_no_check(u1.v, v1.v, s), true
         } else if u1.Var {

@@ -62,3 +62,5 @@ type DBValue struct {
 type Symbol struct {
 	name string
 }
+
+type Unique struct {}
