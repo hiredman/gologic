@@ -35,10 +35,10 @@ func TestReasoningOverDB (t *testing.T) {
 
         // match.com, for triples!
         c3 := Run(who, And(d.Find("Bob", Likes, something),
-                           d.Find(who, Likes, something),
-                           Or(d.Find(something, Is, "cheap"),
-                              d.Find(something, Is, "delicious")),
-                              d.Find(who, Sex, "female")))
+                d.Find(who, Likes, something),
+                Or(d.Find(something, Is, "cheap"),
+                d.Find(something, Is, "delicious")),
+                d.Find(who, Sex, "female")))
 
         var foo [2]interface{}
 
@@ -50,12 +50,11 @@ func TestReasoningOverDB (t *testing.T) {
                         break
                 }
         }
-	
+
         Assert(t,foo[0] == "Alice",foo[0])
         Assert(t,foo[1] == "Jill",foo[1])
 
 }
-
 
 func TestReasoningOverStructs (t *testing.T) {
         type person struct {
@@ -112,7 +111,7 @@ func ancestoro (db DBValue, a,b interface{}) Goal {
         c := Fresh()
         return Or(db.Find(a,"parent",b),
                 And(db.Find(a,"parent",c),
-		// Call delays calling the goal constructor till goal execution time
+                // Call delays calling the goal constructor till goal execution time
                 Call(ancestoro,db,c,b)))
 }
 
@@ -121,8 +120,48 @@ func TestGenealogy (t *testing.T) {
         db.Assert("bill","parent","mary")
         db.Assert("mary","parent","john")
         q := Fresh()
-	v := db.Deref()
+        v := db.Deref()
         c := Run(q,ancestoro(v,"bill",q))
         Assert(t,<- c == "mary","not mary")
         Assert(t,<- c == "john","not mary")
+}
+
+func TestP4AI (t *testing.T) {
+        const (
+                parent rel =  iota
+		is
+        )
+
+        db := Db()
+        db.Assert("bob",parent,"pam")
+	db.Assert("bob",parent,"tom")
+	db.Assert("liz",parent,"tom")
+	db.Assert("ann",parent,"bob")
+	db.Assert("pat",parent,"bob")
+	db.Assert("jim",parent,"pat")
+	
+	d := db.Deref()
+	q := Fresh()
+	c := Run(q,d.Find("pat",parent,"bob"))
+	if nil == <-c {t.Fail()}
+
+	c = Run(q,d.Find("pat",parent,"liz"))
+	if nil != <-c {t.Fail()}
+
+	c = Run(q,d.Find("liz",parent,q))
+	if "tom" != <-c {t.Fail()}
+
+	c = Run(q,d.Find(q,parent,"bob"))
+	if "pat" != <-c {t.Fail()}
+	if "ann" != <-c {t.Fail()}
+
+	x := Fresh()
+	db.Assert(x,is,"man")
+	db.Assert(x,is,"fallible")
+
+	d = db.Deref()
+	
+	c = Run(q,And(d.Find("socrates",is,"man"),
+		      d.Find("socrates",is,"fallible")))
+	if nil == <-c {t.Fail()}
 }
