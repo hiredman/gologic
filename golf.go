@@ -1,3 +1,4 @@
+//http://brownbuffalo.sourceforge.net/RoundOfGolfClues.html
 package main
 import "fmt"
 import l "gologic"
@@ -23,20 +24,6 @@ func membero(p, t interface{}) l.Goal {
 
 }
 
-// cheating
-// func betweeno(p interface{}, low, high int) l.Goal {
-//      return func (s l.S) l.R {
-//              x := l.Project(p,s)
-//              y, ok := x.(int)
-//              if ok && (low+1 < y) && (y < high+1) {
-//                      return l.Unit(s)
-//              // } else if l.IsSymbol(x) {
-//              //      return l.Unit(s)
-//              } else {
-//                      return l.Mzero()
-//              }
-//      }
-// }
 func betweeno(p interface{}, low, high int) l.Goal {
         if low > high {
                 return l.Fail()
