@@ -628,14 +628,6 @@ func Project(a interface{}, s S) interface{} {
         return reify(a,s)
 }
 
-func Unit(s S) R {
-        return unit(s)
-}
-
-func Mzero() R {
-        return mzero()
-}
-
 func IsSymbol(s interface{}) bool {
         _, ok := s.(Symbol)
         return ok
