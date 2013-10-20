@@ -24,10 +24,36 @@ type SubsTNode struct {
 	r *SubsTNode
 }
 
+type ConstraintResult int
+
+const (
+	No ConstraintResult = iota
+	Yes
+	Maybe
+)
+
+type Vars struct {
+	first V
+	rest *Vars
+}
+
+type Constraint struct {
+//	vars *Vars
+	F func(S) (S, ConstraintResult)
+	
+}
+
+type Constraints struct {
+	first Constraint
+	rest *Constraints
+}
+
 type Package struct {
 	s *SubsT
 	c *SubsTNode
+	constraint_store *Constraints
 }
+
 
 type S *Package
 

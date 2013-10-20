@@ -165,3 +165,88 @@ func TestP4AI (t *testing.T) {
 		      d.Find("socrates",is,"fallible")))
 	if nil == <-c {t.Fail()}
 }
+
+func increasing_or_equal(a,b interface{}) Goal {
+	return AddC(Constraint{
+		func (s S) (S, ConstraintResult) {
+			o := Project(a,s)
+			x, xok := o.(int)
+			if xok {
+				o = Project(b,s)
+				y, yok := o.(int)
+				if yok {
+					if y >= x {
+						return s,Yes
+					} else {
+						return s,No
+					}
+				} else {
+					return s,Maybe
+				}
+			} else {
+				return s,Maybe
+			}
+	}})
+}
+
+func difference(a,b,c interface{}) Goal {
+        return AddC(Constraint{
+                func (s S) (S, ConstraintResult) {
+                        xo := Project(a,s)
+                        x, xok := xo.(int)
+                        yo := Project(b,s)
+                        y, yok := yo.(int)
+                        zo := Project(c,s)
+                        z, zok := zo.(int)
+
+                        if xok && yok && zok && x - y == z {
+                                return s,Yes
+                        } else if xok && yok && zok && x - y != z {
+                                return s,No
+                        } else if xok && yok  {
+                                ns,success := Unifi(c,x-y,s)
+                                if success {
+                                        return ns, Yes
+                                } else {
+                                        return ns, No
+                                }
+                        } else if xok && zok  {
+                                ns,success := Unifi(b,x-z,s)
+                                if success {
+                                        return ns, Yes
+                                } else {
+                                        return ns, No
+                                }
+                        } else if yok && zok {
+                                ns,success := Unifi(a,y+z,s)
+                                if success {
+                                        return ns, Yes
+                                } else {
+                                        return ns, No
+                                }
+                        } else {
+                                return s, Maybe
+                        }
+
+
+        }})
+}
+
+
+func TestConstraints(t *testing.T) {
+	
+	q := Fresh()
+	c := Run(q,And(
+		increasing_or_equal(q,5),
+		Unify(q,6)))
+
+	if <- c != nil { t.Fatal("foo")}
+
+	
+	q = Fresh()
+	c = Run(q,Or(difference(1,1,q),difference(2,1,q)))
+	
+	n := <- c
+	if n != 0 { t.Fatal(n)}
+
+}

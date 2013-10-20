@@ -70,6 +70,14 @@ func c_of(p S) *SubsTNode {
         }
 }
 
+func constraints_of(p S) *Constraints {
+        if p != nil {
+                return p.constraint_store
+        } else {
+                return nil
+        }
+}
+
 func exts_no_check (n V, v interface {}, s S) S {
         if n == nil {
                 panic("foo")
@@ -77,12 +85,13 @@ func exts_no_check (n V, v interface {}, s S) S {
 
         a := s_of(s)
         b := c_of(s)
+	c := constraints_of(s)
 
         if a == nil {
-                return &Package{s:&SubsT{name:n,thing:v,more:nil},c:b}
+                return &Package{s:&SubsT{name:n,thing:v,more:nil},c:b,constraint_store:c}
         } else {
                 news := &SubsT{name:n,thing:v,more:a}
-                return &Package{s:news,c:s.c}
+                return &Package{s:news,c:b,constraint_store:c}
         }
 }
 
@@ -202,13 +211,13 @@ func ext_s (x V, v interface{}, s S) (S, bool) {
         }
 }
 
-func unify (u interface{}, v interface{}, s S) (S, bool) {
+func unify_no_constraints (u interface{}, v interface{}, s S) (S, bool) {
         u1 := walk(u,s)
         v1 := walk(v,s)
         if u1.Term && v1.Term && !is_struct(u1.t) && !is_struct(v1.t) {
                 return s, u1.t == v1.t
         } else if (u1.Term || v1.Term) && (u1.t == U || v1.t == U) {
-		return s,false
+                return s,false
         } else if u1.Var && v1.Var {
                 return exts_no_check(u1.v, v1.v, s), true
         } else if u1.Var {
@@ -233,19 +242,55 @@ func unify (u interface{}, v interface{}, s S) (S, bool) {
         }
 }
 
-func unify_no_check (u, v, s S) (S, bool) {
-        u1 := walk(u,s)
-        v1 := walk(v,s)
-        if u1 == v1 {
-                return s,true
-        } else if u1.Var {
-                return exts_no_check(u1.v, v1.v, s), true
-        } else if v1.Var {
-                return ext_s(v1.v,u1.t,s)
+func apply_constraints(s S) (S, bool) {
+	var newc *Constraints
+	ns := s
+	var r ConstraintResult
+	for c := constraints_of(s); c != nil; c = c.rest {
+                if true {
+                        ns, r = c.first.F(ns)
+                        if r == No {
+                                return ns, false
+                        } else if r == Maybe {
+                                newc = &Constraints{c.first,newc}
+                        } else {
+				
+                        }
+                } else {
+                        newc = &Constraints{c.first,newc}
+                }
+        }
+        return make_a(s_of(ns),c_of(ns),newc), true
+}
+
+func unify (u interface{}, v interface{}, s S) (S, bool) {
+        ns, ok := unify_no_constraints(u,v,s)
+        if !ok {
+                return ns,ok
         } else {
-                return s, false
+		nns, success := apply_constraints(ns)
+		if success {
+			return nns, success
+		} else {
+			return ns, false
+		}
+
         }
 }
+
+// func unify_no_check (u, v, s S) (S, bool) {
+//         u1 := walk(u,s)
+//         v1 := walk(v,s)
+//         if u1 == v1 {
+//                 return s,true
+//         } else if u1.Var {
+//                 return exts_no_check(u1.v, v1.v, s), true
+//         } else if v1.Var {
+//                 return ext_s(v1.v,u1.t,s)
+//         } else {
+//                 return s, false
+//         }
+// }
 
 func walk_star (v LookupResult, s S) LookupResult {
         if v.Var {
@@ -464,8 +509,8 @@ func cons_c (c *SubsT, cs *SubsTNode) *SubsTNode {
         return &SubsTNode{e:c,r:cs}
 }
 
-func make_a (s *SubsT, c *SubsTNode) S {
-        return &Package{s:s,c:c}
+func make_a (s *SubsT, c *SubsTNode, con *Constraints) S {
+        return &Package{s:s,c:c,constraint_store:con}
 }
 
 func prefix_s(s *SubsT, ss *SubsT) *SubsT {
@@ -483,7 +528,7 @@ func neq_verify(s *SubsT, a S, unify_success bool) R {
                 return mzero()
         } else {
                 c := prefix_s(s,s_of(a))
-                b := make_a(s_of(a), cons_c(c, c_of(a)))
+                b := make_a(s_of(a), cons_c(c, c_of(a)), constraints_of(a))
                 return unit(b)
         }
 }
@@ -536,7 +581,7 @@ func unify_verify(s S, a S, unify_success bool) R {
         } else  {
                 c, verified := verify_c(c_of(a), nil, s)
                 if verified {
-                        return unit(make_a(s_of(s), c))
+                        return unit(make_a(s_of(s), c, constraints_of(s)))
                 } else {
                         return mzero()
                 }
@@ -577,4 +622,37 @@ func Call(constructor interface{}, args ...interface{}) Goal {
                 }
 
         }
+}
+
+func Project(a interface{}, s S) interface{} {
+        return reify(a,s)
+}
+
+func Unit(s S) R {
+        return unit(s)
+}
+
+func Mzero() R {
+        return mzero()
+}
+
+func IsSymbol(s interface{}) bool {
+        _, ok := s.(Symbol)
+        return ok
+}
+
+func AddC (c Constraint) Goal {
+        return func (s S) R {
+		new_s := make_a(s_of(s),c_of(s),&Constraints{c,constraints_of(s)})
+		ns, ok := apply_constraints(new_s)
+		if ok {
+			return unit(ns)
+		} else {
+			return mzero()
+		}
+        }
+}
+
+func Unifi(a,b interface{}, s S) (S, bool) {
+	return unify_no_constraints(a,b,s)
 }
