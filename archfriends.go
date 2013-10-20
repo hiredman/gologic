@@ -19,14 +19,14 @@ func v () l.V {
 	return l.Fresh()
 }
 
-func membero(p, t interface{}) l.Goal {
-	return l.Or(
-		l.Unify(Trip{  p,v(),v(),v()}, t),
-		l.Unify(Trip{v(),  p,v(),v()}, t),
-		l.Unify(Trip{v(),v(),  p,v()}, t),
-		l.Unify(Trip{v(),v(),v(),  p}, t))
+// func membero(p, t interface{}) l.Goal {
+// 	return l.Or(
+// 		l.Unify(Trip{  p,v(),v(),v()}, t),
+// 		l.Unify(Trip{v(),  p,v(),v()}, t),
+// 		l.Unify(Trip{v(),v(),  p,v()}, t),
+// 		l.Unify(Trip{v(),v(),v(),  p}, t))
 		
-}
+// }
 
 func aftero(p1, p2, t interface{}) l.Goal {
 	return l.Or(
@@ -35,8 +35,13 @@ func aftero(p1, p2, t interface{}) l.Goal {
 		l.Unify(Trip{v(),v(), p1, p2}, t))		
 }
 
+func t (a,b,c,d interface{}) interface{} {
+	return Trip{a,b,c,d}
+}
+
 func archo (q l.V) l.Goal {
 	a,b := l.Fresh2()
+	membero := l.StructMemberoConstructor4(t)
         return l.And(
 		membero(Purchase{"The Foot Farm", v()}, q),
 		membero(Purchase{"Heels in a Handcart", v()}, q),

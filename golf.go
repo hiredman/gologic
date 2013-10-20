@@ -15,15 +15,6 @@ func v () l.V {
         return l.Fresh()
 }
 
-func membero(p, t interface{}) l.Goal {
-        return l.Or(
-                l.Unify(Round{  p,v(),v(),v()}, t),
-                l.Unify(Round{v(),  p,v(),v()}, t),
-                l.Unify(Round{v(),v(),  p,v()}, t),
-                l.Unify(Round{v(),v(),v(),  p}, t))
-
-}
-
 func betweeno(p interface{}, low, high int) l.Goal {
         if low > high {
                 return l.Fail()
@@ -45,99 +36,8 @@ func scoreo (q interface{}) l.Goal {
                 betweeno(d,70,85))
 }
 
-func difference(a,b,c interface{}) l.Goal {
-        return l.AddC(l.Constraint{
-                func (s l.S) (l.S, l.ConstraintResult) {
-                        xo := l.Project(a,s)
-                        x, xok := xo.(int)
-                        yo := l.Project(b,s)
-                        y, yok := yo.(int)
-                        zo := l.Project(c,s)
-                        z, zok := zo.(int)
-
-                        if xok && yok && zok && x - y == z {
-                                return s,l.Yes
-                        } else if xok && yok && zok && x - y != z {
-                                return s,l.No
-                        } else if xok && yok  {
-                                ns,success := l.Unifi(c,x-y,s)
-                                if success {
-                                        return ns, l.Yes
-                                } else {
-                                        return ns, l.No
-                                }
-                        } else if xok && zok  {
-                                ns,success := l.Unifi(b,x-z,s)
-                                if success {
-                                        return ns, l.Yes
-                                } else {
-                                        return ns, l.No
-                                }
-                        } else if yok && zok {
-                                ns,success := l.Unifi(a,y+z,s)
-                                if success {
-                                        return ns, l.Yes
-                                } else {
-                                        return ns, l.No
-                                }
-                        } else {
-                                return s, l.Maybe
-                        }
-
-
-        }})
-}
-
-
-func increasing_or_equal(a,b interface{}) l.Goal {
-        return l.AddC(l.Constraint{
-                func (s l.S) (l.S, l.ConstraintResult) {
-                        o := l.Project(a,s)
-                        x, xok := o.(int)
-                        if xok {
-                                o = l.Project(b,s)
-                                y, yok := o.(int)
-                                if yok {
-                                        if y >= x {
-                                                return s,l.Yes
-                                        } else {
-                                                return s,l.No
-                                        }
-                                } else {
-                                        return s,l.Maybe
-                                }
-                        } else {
-                                return s,l.Maybe
-                        }
-        }})
-}
-
-func increasing(a,b interface{}) l.Goal {
-        return l.AddC(l.Constraint{
-                func (s l.S) (l.S, l.ConstraintResult) {
-                        o := l.Project(a,s)
-                        x, xok := o.(int)
-                        if xok {
-                                o = l.Project(b,s)
-                                y, yok := o.(int)
-                                if yok {
-                                        if y > x {
-                                                return s,l.Yes
-                                        } else {
-                                                return s,l.No
-                                        }
-                                } else {
-                                        return s,l.Maybe
-                                }
-                        } else {
-                                return s,l.Maybe
-                        }
-        }})
-}
-
-
-
 func golfo (q l.V) l.Goal {
+	membero := l.StructMemberoConstructor4(func (a,b,c,d interface{}) interface{} {return Round{a,b,c,d}})
         bills_job := v()
         bills_score := v()
         mr_clubb_first_name := v()
@@ -165,29 +65,29 @@ func golfo (q l.V) l.Goal {
                 membero(Dude{"Bill", v(), bills_job, bills_score}, q),
                 l.Neq(bills_job,"maintenance man"),
 		membero(Dude{v(), v(), "maintenance man", v()}, q),
-                increasing(bills_score,score2),
-		increasing(bills_score,score3),
-		increasing(bills_score,score4),
+                l.Increasing(bills_score,score2),
+		l.Increasing(bills_score,score3),
+		l.Increasing(bills_score,score4),
 
                 // // 2
                 membero(Dude{mr_clubb_first_name, "Clubb", v(), mr_clubbs_score}, q),
                 l.Neq(mr_clubb_first_name, "Paul"),
                 membero(Dude{v(), v(), "pro-shop clerk", pro_shop_clerk_score}, q),
-		difference(mr_clubbs_score,10,pro_shop_clerk_score),
+		l.Difference(mr_clubbs_score,10,pro_shop_clerk_score),
 
                 // //3
                 membero(Dude{"Frank", v(), v(), frank_score}, q),
                 membero(Dude{v(), v(), "caddy", caddy_score}, q),
                 membero(Dude{v(), "Sands", v(), sands_score}, q),
                 
-                l.Or(l.And(difference(frank_score, 7, sands_score),
-                           difference(caddy_score, 4, sands_score)),
-                     l.And(difference(frank_score, 4, sands_score),
-                           difference(caddy_score, 7, sands_score))),
+                l.Or(l.And(l.Difference(frank_score, 7, sands_score),
+                           l.Difference(caddy_score, 4, sands_score)),
+                     l.And(l.Difference(frank_score, 4, sands_score),
+                           l.Difference(caddy_score, 7, sands_score))),
 
                 // // // 4
                 membero(Dude{mr_carters_first_name, "Carter", v(), 78}, q),
-                increasing(frank_score, 78),
+                l.Increasing(frank_score, 78),
 		l.Neq(mr_carters_first_name,"Frank"),
 
                 // // // 5
