@@ -648,3 +648,33 @@ func AddC (c Constraint) Goal {
 func Unifi(a,b interface{}, s S) (S, bool) {
 	return unify_no_constraints(a,b,s)
 }
+
+func StructMemberoConstructor5 (f func (interface{},interface{},interface{},interface{},interface{}) interface{}) func (interface{}, interface{}) Goal {
+	return func (p, t interface{}) Goal {
+		return Or(
+			Unify(f(      p,Fresh(),Fresh(),Fresh(),Fresh()), t),
+			Unify(f(Fresh(),      p,Fresh(),Fresh(),Fresh()), t),
+			Unify(f(Fresh(),Fresh(),      p,Fresh(),Fresh()), t),
+			Unify(f(Fresh(),Fresh(),Fresh(),      p,Fresh()), t),
+			Unify(f(Fresh(),Fresh(),Fresh(),Fresh(),      p), t))
+	}
+}
+
+func StructMemberoConstructor4 (f func (interface{},interface{},interface{},interface{}) interface{}) func (interface{}, interface{}) Goal {
+	return func (p, t interface{}) Goal {
+		return Or(
+			Unify(f(      p,Fresh(),Fresh(),Fresh()), t),
+			Unify(f(Fresh(),      p,Fresh(),Fresh()), t),
+			Unify(f(Fresh(),Fresh(),      p,Fresh()), t),
+			Unify(f(Fresh(),Fresh(),Fresh(),      p), t))
+	}
+}
+
+func StructMemberoConstructor3 (f func (interface{},interface{},interface{}) interface{}) func (interface{}, interface{}) Goal {
+	return func (p, t interface{}) Goal {
+		return Or(
+			Unify(f(      p,Fresh(),Fresh()), t),
+			Unify(f(Fresh(),      p,Fresh()), t),
+			Unify(f(Fresh(),Fresh(),      p), t))
+	}
+}
