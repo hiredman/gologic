@@ -19,6 +19,10 @@ type B struct {
         H5 interface {}
 }
 
+func (b B) String() string {
+	return fmt.Sprintf("Block:\n  %s\n  %s\n  %s\n  %s\n  %s",b.H1,b.H2,b.H3,b.H4,b.H5)
+}
+
 func v() l.V {
         return l.Fresh()
 }
@@ -67,7 +71,9 @@ func zerbao (q l.V) l.Goal {
                 membero(H{"japanese","parliaments",v(),v(),v()},q),
                 membero(H{v(),"oldgolds",v(),"snails",v()},q),
                 nexto(H{v(),v(),v(),"horse",v()},H{v(),"kools",v(),v(),v()},q),
-                nexto(H{v(),v(),v(),"fox",v()},H{v(),"chesterfields",v(),v(),v()},q))
+                nexto(H{v(),v(),v(),"fox",v()},H{v(),"chesterfields",v(),v(),v()},q),
+                membero(H{v(),v(),v(),"zebra",v()},q),
+		membero(H{v(),v(),"water",v(),v()},q),)
 
 }
 
