@@ -6,3 +6,5 @@ go:
   - tip
 
 install: go vet
+
+script: go test -v
