@@ -399,7 +399,7 @@ func reify (v_ interface{}, s S) interface{} {
         }
         v := walk_star(lr,s)
         x := reify_s(v,nil)
-        lr2 := walk_star(v, x)
+        lr2 := walk_star(v, make_a(s_of(x),nil,nil))
         return lr2.t
 }
 
@@ -649,7 +649,17 @@ func Call(constructor interface{}, args ...interface{}) Goal {
 }
 
 func Project(a interface{}, s S) interface{} {
-        return reify(a,s)
+	v, vok := a.(V)
+	if vok {
+		lr := walk_star(AVar(v),s)
+		if lr.Var {
+			return lr.v
+		} else {
+			return lr.t
+		}
+	} else {
+		return a
+	}
 }
 
 func IsSymbol(s interface{}) bool {

@@ -124,7 +124,13 @@ func Neq(a,b interface{}) Goal {
 				if x == y {
 					return s, No
 				} else {
-					return s, Maybe
+					_,xok := x.(V)
+					_,yok := y.(V)
+					if yok || xok {
+						return s, Maybe
+					} else {
+						return s, Yes
+					}
 				}
 			}
 		}})
