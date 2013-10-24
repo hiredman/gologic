@@ -1,4 +1,4 @@
-package redblack
+package gologic
 import "container/list"
 
 type color int

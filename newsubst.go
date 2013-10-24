@@ -1,8 +1,7 @@
 package gologic
-import "gologic/redblack"
 
 type node struct {
-	r *redblack.Rbnode
+	r *Rbnode
 	size int
 }
 
@@ -10,13 +9,13 @@ func (p subs_pair) Key() int {
 	return p.v.id
 }
 
-func (p subs_pair) Merge(e redblack.Element) redblack.Element {
+func (p subs_pair) Merge(e Element) Element {
 	return p
 }
 
 func (n node) val_at (v V) (interface {}, bool) {
 	if n.r != nil {
-		x, found := redblack.Locate(n.r,v.id)
+		x, found := Locate(n.r,v.id)
 		if found {
 			a,ok := x.(subs_pair)
 			if ok {
@@ -33,7 +32,7 @@ func (n node) val_at (v V) (interface {}, bool) {
 }
 
 func (n node) with (v V, t interface{}) substitution_map {
-	return node{redblack.Insert(n.r,subs_pair{v,t}),n.size+1}
+	return node{Insert(n.r,subs_pair{v,t}),n.size+1}
 }
 
 func (n node) count () int {
@@ -41,7 +40,7 @@ func (n node) count () int {
 }
 
 func (n node) fold (f func(interface{},V,interface{}) (interface{},bool), init interface{}) (interface{},bool) {
-	return redblack.Fold(init,func(x interface{}, e redblack.Element) (interface{}, bool){
+	return Fold(init,func(x interface{}, e Element) (interface{}, bool){
 		p, ok := e.(subs_pair)
 		if !ok {panic("uh oh")}
 		return f(x,p.v,p.t)
@@ -50,6 +49,6 @@ func (n node) fold (f func(interface{},V,interface{}) (interface{},bool), init i
 
 func (s empty_subst_value) with (v V, t interface{}) substitution_map {
 	//return &SubsT{v,t,nil}
-	return node{redblack.Node(subs_pair{v,t}),1}
+	return node{Node(subs_pair{v,t}),1}
 }
 

@@ -1,4 +1,4 @@
-package redblack
+package gologic
 import "testing"
 import "unicode/utf8"
 import "container/list"
