@@ -2,6 +2,7 @@
 package gologic
 import "strconv"
 import "reflect"
+import "fmt"
 
 var c chan int
 
@@ -699,5 +700,14 @@ func StructMemberoConstructor3 (f func (interface{},interface{},interface{}) int
 			Unify(f(      p,Fresh(),Fresh()), t),
 			Unify(f(Fresh(),      p,Fresh()), t),
 			Unify(f(Fresh(),Fresh(),      p), t))
+	}
+}
+
+func PrintChannel(n int, c chan interface{}) {
+	for i := 0; i < n; i++ {
+		e := <- c
+		if e != nil {
+			fmt.Println(e)
+		}
 	}
 }
