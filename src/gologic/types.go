@@ -12,6 +12,18 @@ type SubsT struct {
         more *SubsT
 }
 
+type subs_pair struct {
+	v V
+	t interface {}
+}
+
+type substitution_map interface {
+	val_at (V) (interface{}, bool)
+	with (V, interface{}) substitution_map
+	count () int
+	fold(func (interface{},V,interface{}) (interface{},bool), interface{}) (interface{}, bool)
+}
+
 type LookupResult struct {
         Var bool
         v V
@@ -20,7 +32,7 @@ type LookupResult struct {
 }
 
 type SubsTNode struct {
-	e *SubsT
+	e substitution_map
 	r *SubsTNode
 }
 
@@ -49,7 +61,7 @@ type Constraints struct {
 }
 
 type Package struct {
-	s *SubsT
+	s substitution_map
 	c *SubsTNode
 	constraint_store *Constraints
 }

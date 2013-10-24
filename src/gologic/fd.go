@@ -112,3 +112,20 @@ func Mult(a,b,c interface{}) Goal {
 
         }})
 }
+
+func Neq(a,b interface{}) Goal {
+        return AddC(Constraint{
+                func (s S) (S, ConstraintResult) {
+			if a == b {
+				return s, No
+			} else {
+				x := Project(a,s)
+				y := Project(b,s)
+				if x == y {
+					return s, No
+				} else {
+					return s, Maybe
+				}
+			}
+		}})
+}
