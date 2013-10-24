@@ -1,5 +1,7 @@
 # Gologic
 
+[![Build Status](https://travis-ci.org/hiredman/gologic.png?branch=master)](https://travis-ci.org/hiredman/gologic)
+
 A port of core minikanren with inequality to Go based on doctor Byrd's
 thesis.
 
