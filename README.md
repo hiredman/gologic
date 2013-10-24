@@ -36,11 +36,11 @@ a goal constructor is a function that returns a goal
 
 See `gologic_test.go`
 
-`zebra.go` has an example of solving the zebra puzzle ported from
+`examples/zebra.go` has an example of solving the zebra puzzle ported from
 Clojure's `core.logic`. You can run the example like:
 
 ```sh
-GOPATH=$PWD go build examples/zebra.go && time ./zebra 
+GOPATH=$PWD/examples go build examples/zebra.go && time ./zebra
 ```
 
 `gologic.Call` is a goal constructor that is a useful helper for
@@ -51,7 +51,7 @@ in `gologic_test.go`
 ## Benchmarks
 
 ```sh
- GOPATH=$PWD go test -bench ".*" gologic 
+go test -bench '.*' 
 ```
 
 ## License
