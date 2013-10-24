@@ -1,0 +1,7 @@
+Script started on Thu Oct 24 02:07:20 2013
+PASS
+BenchmarkGolf	       5	 772026279 ns/op
+BenchmarkZerbra	     100	  29474025 ns/op
+ok  	_/Users/hiredman/src/gologic	7.678s
+
+Script done on Thu Oct 24 02:07:28 2013
