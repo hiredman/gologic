@@ -79,6 +79,10 @@ func constraints_of(p S) *Constraints {
         }
 }
 
+func make_a (s substitution_map, c *SubsTNode, con *Constraints) S {
+        return &the_package{s:s,c:c,constraint_store:con}
+}
+
 func exts_no_check (n V, v interface {}, s S) S {
         if n == nil {
                 panic("foo")
@@ -89,10 +93,9 @@ func exts_no_check (n V, v interface {}, s S) S {
 	c := constraints_of(s)
 
         if a == nil {
-                return &Package{s:new_subst().with(n,v),c:b,constraint_store:c}
+		return make_a(new_subst().with(n,v),b,c)
         } else {
-                news := a.with(n,v)
-                return &Package{s:news,c:b,constraint_store:c}
+		return make_a(a.with(n,v),b,c)
         }
 }
 
@@ -447,7 +450,7 @@ func init () {
 
 // Fresh returns a new logic variable
 func Fresh() V {
-        foo := new(LVarT)
+        foo := new(lvart)
         foo.id = <- c
         return foo
 }
@@ -474,10 +477,6 @@ func Fresh6() (V,V,V,V,V,V) {
 
 func cons_c (c substitution_map, cs *SubsTNode) *SubsTNode {
         return &SubsTNode{e:c,r:cs}
-}
-
-func make_a (s substitution_map, c *SubsTNode, con *Constraints) S {
-        return &Package{s:s,c:c,constraint_store:con}
 }
 
 // func unify_star(p substitution_map, s S) (S, bool){
@@ -522,7 +521,7 @@ func Unify (u interface{}, v interface{}) Goal {
         }
 }
 
-func (v LVarT) String () string {
+func (v lvart) String () string {
         return "<lvar "+string(v.id)+">"
 }
 

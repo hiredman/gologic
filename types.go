@@ -1,16 +1,10 @@
 package gologic
 
-type LVarT struct {
+type lvart struct {
         id int
 }
 
-type V *LVarT
-
-type SubsT struct {
-        name V
-        thing interface {}
-        more *SubsT
-}
+type V *lvart
 
 type subs_pair struct {
 	v V
@@ -37,7 +31,7 @@ type SubsTNode struct {
 	r *SubsTNode
 }
 
-type ConstraintResult int
+type ConstraintResult uint
 
 const (
 	No ConstraintResult = iota
@@ -45,13 +39,8 @@ const (
 	Maybe
 )
 
-type Vars struct {
-	first V
-	rest *Vars
-}
 
 type Constraint struct {
-//	vars *Vars
 	F func(S) (S, ConstraintResult)
 	
 }
@@ -61,14 +50,12 @@ type Constraints struct {
 	rest *Constraints
 }
 
-type Package struct {
+type the_package struct {
 	s substitution_map
 	c *SubsTNode
 	constraint_store *Constraints
 }
-
-
-type S *Package
+type S *the_package
 
 type Stream struct {
         first S
