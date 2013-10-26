@@ -39,16 +39,20 @@ func (n node) count () int {
 	return n.size
 }
 
-func (n node) fold (f func(interface{},V,interface{}) (interface{},bool), init interface{}) (interface{},bool) {
-	return Fold(init,func(x interface{}, e Element) (interface{}, bool){
-		p, ok := e.(subs_pair)
-		if !ok {panic("uh oh")}
-		return f(x,p.v,p.t)
-	},n.r)
-}
-
 func (s empty_subst_value) with (v V, t interface{}) substitution_map {
 	//return &SubsT{v,t,nil}
 	return node{Node(subs_pair{v,t}),1}
+}
+
+func (s empty_subst_value) val_at (v V) (interface {}, bool) {
+	return nil,false
+}
+
+func (s empty_subst_value) count () int {
+	return 0
+}
+
+func new_subst () substitution_map {
+	return empty_subst_value{}
 }
 

@@ -21,8 +21,9 @@ type substitution_map interface {
 	val_at (V) (interface{}, bool)
 	with (V, interface{}) substitution_map
 	count () int
-	fold(func (interface{},V,interface{}) (interface{},bool), interface{}) (interface{}, bool)
 }
+
+type empty_subst_value struct {}
 
 type LookupResult struct {
         Var bool

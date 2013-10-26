@@ -480,29 +480,29 @@ func make_a (s substitution_map, c *SubsTNode, con *Constraints) S {
         return &Package{s:s,c:c,constraint_store:con}
 }
 
-func unify_star(p substitution_map, s S) (S, bool){
-        if nil == p {
-                return s, true
-        } else {
-		i, ok := p.fold(func (i interface{}, v V, t interface{}) (interface{}, bool) {
-			s1, ok := i.(S)
-			if !ok {panic("oh no")}
-			s1, unify_success := unify(v,t,s1)
-			if unify_success {
-				return s1,true
-			} else {
-				return nil, false
-			}
-		}, s)
-		if ok {
-			s1, ok2 := i.(S)
-			if !ok2 {panic("oh no")}
-			return s1, true
-		} else {
-			return nil, false
-		}
-        }
-}
+// func unify_star(p substitution_map, s S) (S, bool){
+//         if nil == p {
+//                 return s, true
+//         } else {
+// 		i, ok := p.fold(func (i interface{}, v V, t interface{}) (interface{}, bool) {
+// 			s1, ok := i.(S)
+// 			if !ok {panic("oh no")}
+// 			s1, unify_success := unify(v,t,s1)
+// 			if unify_success {
+// 				return s1,true
+// 			} else {
+// 				return nil, false
+// 			}
+// 		}, s)
+// 		if ok {
+// 			s1, ok2 := i.(S)
+// 			if !ok2 {panic("oh no")}
+// 			return s1, true
+// 		} else {
+// 			return nil, false
+// 		}
+//         }
+// }
 
 func unify_verify(s S, a S, unify_success bool) R {
         if !unify_success {

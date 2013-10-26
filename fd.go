@@ -151,10 +151,6 @@ func Mult(a,b,c interface{}) Goal {
         }})
 }
 
-
-
-
-
 func Neq(a,b interface{}) Goal {
         return AddC(Constraint{
                 func (s S) (S, ConstraintResult) {
