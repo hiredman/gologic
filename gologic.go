@@ -96,28 +96,6 @@ func exts_no_check (n V, v interface {}, s S) S {
         }
 }
 
-// func subst_name(s S) V {
-//         return s.s.name
-// }
-
-// func subst_thing(s S) interface {} {
-//         return s.s.thing
-// }
-
-// func subst_more(s S) S {
-//         if s_of(s) != nil {
-//                 a := s_of(s)
-//                 b := c_of(s)
-//                 if a != nil {
-//                         return &Package{s:a.more,c:b}
-//                 } else {
-//                         return &Package{s:nil,c:b}
-//                 }
-//         } else {
-//                 return s
-//         }
-// }
-
 func empty_subst(s S) bool {
         return s_of(s) == nil
 }
@@ -137,28 +115,6 @@ func ATerm(t interface{}) LookupResult {
         lr.t = t
         return lr
 }
-
-// func lookup (thing interface{}, s S) LookupResult {
-//         v, isvar := thing.(V)
-//         if !isvar {
-// 		return ATerm(thing)
-//         } else {
-//                 if empty_subst(s) {
-// 			return AVar(v)
-// 		} else {
-// 			thing, found := s_of(s).val_at(v)
-// 			if found {
-// 				return ATerm(thing)
-// 			} else {
-// 				return 
-// 			}
-//                 } else if subst_name(s) == v {
-// 			return ATerm(subst_thing(s))
-//                 } else {
-//                         return lookup(thing,subst_more(s))
-//                 }
-//         }
-// }
 
 func subst_find(v V, s S) (interface{}, bool) {
 	x := s_of(s)
@@ -221,11 +177,28 @@ func ext_s (x V, v interface{}, s S) (S, bool) {
         }
 }
 
+// func is_number(n interface{}) bool {
+// 	_, ok := n.(int64)
+// 	if ok {return true}
+// 	_, ok1 := n.(float64)
+// 	if ok1 {return true}
+// 	return false
+// }
+
+// func numbers_equal(a interface{}, b interface{}) bool {
+// 	x,_ := a.(float64)
+// 	y,_ := b.(float64)
+// 	return x == y
+	
+// }
+
 func unify_no_constraints (u interface{}, v interface{}, s S) (S, bool) {
         u1 := walk(u,s)
         v1 := walk(v,s)
         if u1.Term && v1.Term && !is_struct(u1.t) && !is_struct(v1.t) {
                 return s, u1.t == v1.t
+	// } else if u1.Term && v1.Term && is_number(u1.t) && is_number(v1.t) {
+	// 	return s, numbers_equal(u1.t,v1.t)
         } else if (u1.Term || v1.Term) && (u1.t == U || v1.t == U) {
                 return s,false
         } else if u1.Var && v1.Var {
@@ -287,20 +260,6 @@ func unify (u interface{}, v interface{}, s S) (S, bool) {
 
         }
 }
-
-// func unify_no_check (u, v, s S) (S, bool) {
-//         u1 := walk(u,s)
-//         v1 := walk(v,s)
-//         if u1 == v1 {
-//                 return s,true
-//         } else if u1.Var {
-//                 return exts_no_check(u1.v, v1.v, s), true
-//         } else if v1.Var {
-//                 return ext_s(v1.v,u1.t,s)
-//         } else {
-//                 return s, false
-//         }
-// }
 
 func walk_star (v LookupResult, s S) LookupResult {
         if v.Var {
@@ -477,8 +436,6 @@ func Run (v V, g Goal) chan interface{} {
         return c
 }
 
-
-
 func init () {
         c = make(chan int, 10)
         go func () {
@@ -523,37 +480,6 @@ func make_a (s substitution_map, c *SubsTNode, con *Constraints) S {
         return &Package{s:s,c:c,constraint_store:con}
 }
 
-// func prefix_s(s substitution_map, ss substitution_map) *SubsT {
-//         if s == ss {
-//                 return nil
-//         } else {
-//                 //return &SubsT{name:s.name,thing:s.thing,more:prefix_s(s.more, ss)}
-// 		return 
-// 		return &SubsT{name:s.name,thing:s.thing,more:prefix_s(s.more, ss)}
-//         }
-// }
-
-// func neq_verify(s *SubsT, a S, unify_success bool) R {
-//         if !unify_success {
-//                 return unit(a)
-//         } else if s_of(a) == s {
-//                 return mzero()
-//         } else {
-//                 c := prefix_s(s,s_of(a))
-//                 b := make_a(s_of(a), cons_c(c, c_of(a)), constraints_of(a))
-//                 return unit(b)
-//         }
-// }
-
-
-// // Neq returns a goal that suceeds when u and v do not unify
-// func Neq (u interface{}, v interface{}) Goal {
-//         return func (s S) R {
-//                 s1, unify_success := unify(u,v,s)
-//                 return neq_verify(s_of(s1),s,unify_success)
-//         }
-// }
-
 func unify_star(p substitution_map, s S) (S, bool){
         if nil == p {
                 return s, true
@@ -578,36 +504,12 @@ func unify_star(p substitution_map, s S) (S, bool){
         }
 }
 
-// func verify_c(c *SubsTNode, cs *SubsTNode, s S) (*SubsTNode, bool) {
-//         if c == nil {
-//                 return cs, true
-//         } else {
-//                 s1, unify_success := unify_star(c.e,s)
-//                 if unify_success {
-//                         if s == s1 {
-//                                 return nil,false
-//                         } else {
-//                                 cc := prefix_s(s_of(s1),s_of(s))
-//                                 return verify_c(c.r, &SubsTNode{e:cc,r:cs}, s)
-//                         }
-//                 } else {
-//                         return verify_c(c.r, cs, s)
-//                 }
-//         }
-// }
-
 func unify_verify(s S, a S, unify_success bool) R {
         if !unify_success {
                 return mzero()
         } else if s_of(a) == s_of(s) {
                 return unit(a)
         } else  {
-                // c, verified := verify_c(c_of(a), nil, s)
-                // if verified {
-                //         return unit(make_a(s_of(s), c, constraints_of(s)))
-                // } else {
-                //         return mzero()
-                // }
 		return unit(s)
         }
 }

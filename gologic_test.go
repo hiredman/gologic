@@ -250,3 +250,52 @@ func TestConstraints(t *testing.T) {
 	if n != 0 { t.Fatal(n)}
 
 }
+
+func TestMult(t *testing.T) {
+	q := Fresh()
+	c := Run(q,Mult(2,2,q))
+	Assert(t,(<- c).(int) == 4, "not four")
+
+	q = Fresh()
+	c = Run(q,Mult(2,q,8))
+	Assert(t,(<- c).(int) == 4, "not four")
+
+	q = Fresh()
+	c = Run(q,Mult(q,2,8))
+	Assert(t,(<- c).(int) == 4, "not four")
+}
+
+func TestDivide(t *testing.T) {
+	q := Fresh()
+	c := Run(q,Divide(8,2,q))
+	Assert(t,(<- c).(int) == 4, "not four 1")
+
+	q = Fresh()
+	c = Run(q,Divide(8,q,2))
+	Assert(t,(<- c).(int) == 4, "not four 2")
+
+	q = Fresh()
+	c = Run(q,Divide(q,2,2))
+	Assert(t,(<- c).(int) == 4, "not four 3")
+}
+
+func TestSum(t *testing.T) {
+	q := Fresh()
+	c := Run(q,Sum(2,2,q))
+	Assert(t,(<- c).(int) == 4, "not four 1")
+
+	q = Fresh()
+	c = Run(q,Sum(-2,q,2))
+	Assert(t,(<- c).(int) == 4, "not four 2")
+
+	q = Fresh()
+	c = Run(q,Sum(q,-2,2))
+	Assert(t,(<- c).(int) == 4, "not four 3")
+}
+
+// func TestNumberUnification(t *testing.T) {
+// 	c := Run(Fresh(),Unify(1.0,1))
+// 	i := <- c
+// 	Assert(t,1.0 == float64(1.0),"foo")
+// 	Assert(t,i != nil, i)
+// }
